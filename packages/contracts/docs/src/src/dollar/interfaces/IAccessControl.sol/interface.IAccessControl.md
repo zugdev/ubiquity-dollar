@@ -1,5 +1,5 @@
 # IAccessControl
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/4924ab0035521e70625d704791f5b260a4713327/src/dollar/interfaces/IAccessControl.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/49f9572156af908d8e01f3af3e3983810b447fee/src/dollar/interfaces/IAccessControl.sol)
 
 Access contol interface
 
@@ -46,6 +46,22 @@ function getRoleAdmin(bytes32 role) external view returns (bytes32);
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`bytes32`|Admin role for a provided role|
+
+
+### setRoleAdmin
+
+Sets admin role for a given role
+
+
+```solidity
+function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`role`|`bytes32`|Role to set|
+|`adminRole`|`bytes32`|Admin role to set for a provided role|
 
 
 ### grantRole

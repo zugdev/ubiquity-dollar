@@ -19,7 +19,7 @@ contract TestDiamond is DiamondTestSetup {
     }
 
     function testHasMultipleFacets() public {
-        assertEq(facetAddressList.length, 20);
+        assertEq(facetAddressList.length, 19);
     }
 
     function testFacetsHaveCorrectSelectors() public {
@@ -344,5 +344,15 @@ contract TestDiamond is DiamondTestSetup {
                 }
             }
         }
+    }
+
+    function testFallback_ShouldRevert_IfSelectorIsTooShort() public {
+        // pass 3 bytes selector while normally it should be 4 bytes length
+        vm.expectRevert(bytes("Diamond: Selector is too short"));
+        (bool revertsAsExpected, ) = address(diamond).call(bytes("000"));
+        // NOTICE: for low level calls (like `address.call()`) the returned result
+        // is NOT the success of the low level call but the success of the `vm.expectRevert()`
+        // expression, more info: https://book.getfoundry.sh/cheatcodes/expect-revert
+        assertTrue(revertsAsExpected);
     }
 }

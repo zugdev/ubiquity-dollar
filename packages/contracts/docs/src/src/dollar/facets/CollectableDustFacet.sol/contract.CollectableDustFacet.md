@@ -1,5 +1,5 @@
 # CollectableDustFacet
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/4924ab0035521e70625d704791f5b260a4713327/src/dollar/facets/CollectableDustFacet.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/49f9572156af908d8e01f3af3e3983810b447fee/src/dollar/facets/CollectableDustFacet.sol)
 
 **Inherits:**
 [ICollectableDust](/src/dollar/interfaces/utils/ICollectableDust.sol/interface.ICollectableDust.md), [Modifiers](/src/dollar/libraries/LibAppStorage.sol/contract.Modifiers.md)
