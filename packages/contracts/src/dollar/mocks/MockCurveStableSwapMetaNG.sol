@@ -29,6 +29,10 @@ contract MockCurveStableSwapMetaNG is ICurveStableSwapMetaNG, MockERC20 {
         return result;
     }
 
+    function balances(uint256 /* i */) external pure returns (uint256) {
+        return 0;
+    }
+
     function calc_token_amount(
         uint256[2] memory _amounts,
         bool /* _is_deposit */

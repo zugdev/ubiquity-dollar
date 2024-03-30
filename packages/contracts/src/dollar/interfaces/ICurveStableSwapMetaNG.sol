@@ -38,6 +38,13 @@ interface ICurveStableSwapMetaNG is IERC20 {
     ) external returns (uint256);
 
     /**
+     * @notice Getter for the current balance of coin `i` within the pool
+     * @param i Coin index
+     * @return Coin balance
+     */
+    function balances(uint256 i) external view returns (uint256);
+
+    /**
      * @notice Estimates the amount of LP tokens minted or burned based on a deposit or withdrawal
      *
      * @notice This calculation accounts for slippage, but not fees. It should be used as a basis for
