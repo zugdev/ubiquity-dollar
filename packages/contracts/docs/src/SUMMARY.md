@@ -42,6 +42,7 @@
       - [ICreditNftRedemptionCalculator](src/dollar/interfaces/ICreditNftRedemptionCalculator.sol/interface.ICreditNftRedemptionCalculator.md)
       - [ICreditRedemptionCalculator](src/dollar/interfaces/ICreditRedemptionCalculator.sol/interface.ICreditRedemptionCalculator.md)
       - [ICurveFactory](src/dollar/interfaces/ICurveFactory.sol/interface.ICurveFactory.md)
+      - [ICurveStableSwapFactoryNG](src/dollar/interfaces/ICurveStableSwapFactoryNG.sol/interface.ICurveStableSwapFactoryNG.md)
       - [ICurveStableSwapMetaNG](src/dollar/interfaces/ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md)
       - [IDepositZap](src/dollar/interfaces/IDepositZap.sol/interface.IDepositZap.md)
       - [IDiamondCut](src/dollar/interfaces/IDiamondCut.sol/interface.IDiamondCut.md)
