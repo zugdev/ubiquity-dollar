@@ -9,6 +9,7 @@
 - [ICreditNftRedemptionCalculator](ICreditNftRedemptionCalculator.sol/interface.ICreditNftRedemptionCalculator.md)
 - [ICreditRedemptionCalculator](ICreditRedemptionCalculator.sol/interface.ICreditRedemptionCalculator.md)
 - [ICurveFactory](ICurveFactory.sol/interface.ICurveFactory.md)
+- [ICurveStableSwapFactoryNG](ICurveStableSwapFactoryNG.sol/interface.ICurveStableSwapFactoryNG.md)
 - [ICurveStableSwapMetaNG](ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md)
 - [IDepositZap](IDepositZap.sol/interface.IDepositZap.md)
 - [IDiamondCut](IDiamondCut.sol/interface.IDiamondCut.md)

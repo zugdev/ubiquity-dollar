@@ -1,5 +1,5 @@
 # ICurveStableSwapMetaNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/49f9572156af908d8e01f3af3e3983810b447fee/src/dollar/interfaces/ICurveStableSwapMetaNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/interfaces/ICurveStableSwapMetaNG.sol)
 
 **Inherits:**
 IERC20
@@ -51,6 +51,27 @@ function add_liquidity(uint256[2] memory _amounts, uint256 _min_mint_amount, add
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`uint256`|The amount of LP tokens that were minted in the deposit|
+
+
+### balances
+
+Getter for the current balance of coin `i` within the pool
+
+
+```solidity
+function balances(uint256 i) external view returns (uint256);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`i`|`uint256`|Coin index|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|Coin balance|
 
 
 ### calc_token_amount

@@ -1,5 +1,5 @@
 # SafeAddArray
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/49f9572156af908d8e01f3af3e3983810b447fee/src/dollar/utils/SafeAddArray.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/utils/SafeAddArray.sol)
 
 Wrappers over Solidity's array push operations with added check
 

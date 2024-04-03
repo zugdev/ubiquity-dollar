@@ -1,5 +1,5 @@
 # CreditNftManagerFacet
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/49f9572156af908d8e01f3af3e3983810b447fee/src/dollar/facets/CreditNftManagerFacet.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/facets/CreditNftManagerFacet.sol)
 
 **Inherits:**
 [Modifiers](/src/dollar/libraries/LibAppStorage.sol/contract.Modifiers.md)
