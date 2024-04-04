@@ -86,6 +86,11 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
             );
     }
 
+    /// @inheritdoc IUbiquityPool
+    function governanceEthPoolAddress() external view returns (address) {
+        return LibUbiquityPool.governanceEthPoolAddress();
+    }
+
     //====================
     // Public functions
     //====================
@@ -197,6 +202,15 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
         uint256 newRedeemFee
     ) external onlyAdmin {
         LibUbiquityPool.setFees(collateralIndex, newMintFee, newRedeemFee);
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function setGovernanceEthPoolAddress(
+        address newGovernanceEthPoolAddress
+    ) external onlyAdmin {
+        LibUbiquityPool.setGovernanceEthPoolAddress(
+            newGovernanceEthPoolAddress
+        );
     }
 
     /// @inheritdoc IUbiquityPool

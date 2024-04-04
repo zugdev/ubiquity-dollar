@@ -8,6 +8,7 @@ import {LibUbiquityPool} from "../../../src/dollar/libraries/LibUbiquityPool.sol
 import {MockChainLinkFeed} from "../../../src/dollar/mocks/MockChainLinkFeed.sol";
 import {MockERC20} from "../../../src/dollar/mocks/MockERC20.sol";
 import {MockCurveStableSwapMetaNG} from "../../../src/dollar/mocks/MockCurveStableSwapMetaNG.sol";
+import {MockCurveTwocryptoOptimized} from "../../../src/dollar/mocks/MockCurveTwocryptoOptimized.sol";
 
 contract MockDollarAmoMinter is IDollarAmoMinter {
     function collateralDollarBalance() external pure returns (uint256) {
@@ -24,7 +25,9 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
     MockERC20 collateralToken;
     MockChainLinkFeed collateralTokenPriceFeed;
     MockCurveStableSwapMetaNG curveDollarMetaPool;
+    MockCurveTwocryptoOptimized curveGovernanceEthPool;
     MockERC20 curveTriPoolLpToken;
+    MockERC20 wethToken;
 
     address user = address(1);
 
@@ -44,6 +47,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         uint256 newMintFee,
         uint256 newRedeemFee
     );
+    event GovernanceEthPoolSet(address newGovernanceEthPoolAddress);
     event MintRedeemBorrowToggled(uint256 collateralIndex, uint8 toggleIndex);
     event PoolCeilingSet(uint256 collateralIndex, uint256 newCeiling);
     event PriceThresholdsSet(
@@ -63,6 +67,9 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         // init collateral price feed
         collateralTokenPriceFeed = new MockChainLinkFeed();
 
+        // init WETH token
+        wethToken = new MockERC20("WETH", "WETH", 18);
+
         // init Curve 3CRV-LP token
         curveTriPoolLpToken = new MockERC20("3CRV", "3CRV", 18);
 
@@ -70,6 +77,12 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         curveDollarMetaPool = new MockCurveStableSwapMetaNG(
             address(dollarToken),
             address(curveTriPoolLpToken)
+        );
+
+        // init Curve Governance-WETH crypto pool
+        curveGovernanceEthPool = new MockCurveTwocryptoOptimized(
+            address(governanceToken),
+            address(wethToken)
         );
 
         // add collateral token to the pool
@@ -96,9 +109,6 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             1 days // price feed staleness threshold in seconds
         );
 
-        // set collateral ratio to 100%
-        ubiquityPoolFacet.setCollateralRatio(1_000_000);
-
         // enable collateral at index 0
         ubiquityPoolFacet.toggleCollateral(0);
         // set mint and redeem fees
@@ -111,6 +121,12 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.setRedemptionDelayBlocks(2);
         // set mint price threshold to $1.01 and redeem price to $0.99
         ubiquityPoolFacet.setPriceThresholds(1010000, 990000);
+        // set collateral ratio to 100%
+        ubiquityPoolFacet.setCollateralRatio(1_000_000);
+        // set Governance-ETH pool
+        ubiquityPoolFacet.setGovernanceEthPoolAddress(
+            address(curveGovernanceEthPool)
+        );
 
         // init AMO minter
         dollarAmoMinter = new MockDollarAmoMinter();
@@ -301,6 +317,14 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         uint256 redeemCollateralBalance = ubiquityPoolFacet
             .getRedeemCollateralBalance(user, 0);
         assertEq(redeemCollateralBalance, 97.02e18);
+    }
+
+    function testGovernanceEthPoolAddress_ShouldReturnGovernanceEthPoolAddress()
+        public
+    {
+        address governanceEthPoolAddress = ubiquityPoolFacet
+            .governanceEthPoolAddress();
+        assertEq(governanceEthPoolAddress, address(curveGovernanceEthPool));
     }
 
     //====================
@@ -914,6 +938,30 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         vm.expectEmit(address(ubiquityPoolFacet));
         emit FeesSet(0, 1, 2);
         ubiquityPoolFacet.setFees(0, 1, 2);
+
+        vm.stopPrank();
+    }
+
+    function testSetGovernanceEthPoolAddress_ShouldSetGovernanceEthPoolAddress()
+        public
+    {
+        vm.startPrank(admin);
+
+        address oldGovernanceEthPoolAddress = ubiquityPoolFacet
+            .governanceEthPoolAddress();
+        assertEq(oldGovernanceEthPoolAddress, address(curveGovernanceEthPool));
+
+        address newGovernanceEthPoolAddress = address(1);
+        vm.expectEmit(address(ubiquityPoolFacet));
+        emit GovernanceEthPoolSet(newGovernanceEthPoolAddress);
+        ubiquityPoolFacet.setGovernanceEthPoolAddress(
+            newGovernanceEthPoolAddress
+        );
+
+        assertEq(
+            ubiquityPoolFacet.governanceEthPoolAddress(),
+            newGovernanceEthPoolAddress
+        );
 
         vm.stopPrank();
     }

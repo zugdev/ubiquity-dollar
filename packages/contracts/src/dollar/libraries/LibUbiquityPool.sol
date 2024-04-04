@@ -89,6 +89,11 @@ library LibUbiquityPool {
         bool[] isMintPaused;
         // whether redeeming is paused for a particular collateral index
         bool[] isRedeemPaused;
+        //====================================
+        // Governance token pricing related
+        //====================================
+        // Curve's CurveTwocryptoOptimized contract for Governance/ETH pair
+        address governanceEthPoolAddress;
     }
 
     /// @notice Struct used for detailed collateral information
@@ -150,6 +155,8 @@ library LibUbiquityPool {
         uint256 newMintFee,
         uint256 newRedeemFee
     );
+    /// @notice Emitted on setting a pool for Governance/ETH pair
+    event GovernanceEthPoolSet(address newGovernanceEthPoolAddress);
     /// @notice Emitted on toggling pause for mint/redeem/borrow
     event MintRedeemBorrowToggled(uint256 collateralIndex, uint8 toggleIndex);
     /// @notice Emitted when new pool ceiling (i.e. max amount of collateral) is set
@@ -358,6 +365,15 @@ library LibUbiquityPool {
         UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
         return
             poolStorage.redeemCollateralBalances[userAddress][collateralIndex];
+    }
+
+    /**
+     * @notice Returns pool address for Governance/ETH pair
+     * @return Pool address
+     */
+    function governanceEthPoolAddress() internal view returns (address) {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+        return poolStorage.governanceEthPoolAddress;
     }
 
     //====================
@@ -830,6 +846,27 @@ library LibUbiquityPool {
         poolStorage.redemptionFee[collateralIndex] = newRedeemFee;
 
         emit FeesSet(collateralIndex, newMintFee, newRedeemFee);
+    }
+
+    /**
+     * @notice Sets a new pool address for Governance/ETH pair
+     *
+     * @dev Based on Curve's CurveTwocryptoOptimized contract. Used for fetching Governance token USD price.
+     * How it works:
+     * 1. Fetch Governance/ETH price from CurveTwocryptoOptimized's built-in oracle
+     * 2. Fetch ETH/USD price from chainlink feed
+     * 3. Calculate Governance token price in USD
+     *
+     * @param newGovernanceEthPoolAddress New pool address for Governance/ETH pair
+     */
+    function setGovernanceEthPoolAddress(
+        address newGovernanceEthPoolAddress
+    ) internal {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        poolStorage.governanceEthPoolAddress = newGovernanceEthPoolAddress;
+
+        emit GovernanceEthPoolSet(newGovernanceEthPoolAddress);
     }
 
     /**

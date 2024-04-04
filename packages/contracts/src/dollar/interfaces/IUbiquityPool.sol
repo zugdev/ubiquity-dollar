@@ -84,6 +84,12 @@ interface IUbiquityPool {
         uint256 collateralIndex
     ) external view returns (uint256);
 
+    /**
+     * @notice Returns pool address for Governance/ETH pair
+     * @return Pool address
+     */
+    function governanceEthPoolAddress() external view returns (address);
+
     //====================
     // Public functions
     //====================
@@ -218,6 +224,21 @@ interface IUbiquityPool {
         uint256 collateralIndex,
         uint256 newMintFee,
         uint256 newRedeemFee
+    ) external;
+
+    /**
+     * @notice Sets a new pool address for Governance/ETH pair
+     *
+     * @dev Based on Curve's CurveTwocryptoOptimized contract. Used for fetching Governance token USD price.
+     * How it works:
+     * 1. Fetch Governance/ETH price from CurveTwocryptoOptimized's built-in oracle
+     * 2. Fetch ETH/USD price from chainlink feed
+     * 3. Calculate Governance token price in USD
+     *
+     * @param newGovernanceEthPoolAddress New pool address for Governance/ETH pair
+     */
+    function setGovernanceEthPoolAddress(
+        address newGovernanceEthPoolAddress
     ) external;
 
     /**
