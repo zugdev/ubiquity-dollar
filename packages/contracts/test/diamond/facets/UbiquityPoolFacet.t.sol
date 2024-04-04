@@ -37,6 +37,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         uint256 stalenessThreshold
     );
     event CollateralPriceSet(uint256 collateralIndex, uint256 newPrice);
+    event CollateralRatioSet(uint256 newCollateralRatio);
     event CollateralToggled(uint256 collateralIndex, bool newState);
     event FeesSet(
         uint256 collateralIndex,
@@ -94,6 +95,9 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             address(collateralTokenPriceFeed), // price feed address
             1 days // price feed staleness threshold in seconds
         );
+
+        // set collateral ratio to 100%
+        ubiquityPoolFacet.setCollateralRatio(1_000_000);
 
         // enable collateral at index 0
         ubiquityPoolFacet.toggleCollateral(0);
@@ -195,6 +199,11 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         assertEq(info.isBorrowPaused, false);
         assertEq(info.mintingFee, 10000);
         assertEq(info.redemptionFee, 20000);
+    }
+
+    function testCollateralRatio_ShouldReturnCollateralRatio() public {
+        uint256 collateralRatio = ubiquityPoolFacet.collateralRatio();
+        assertEq(collateralRatio, 1_000_000);
     }
 
     function testCollateralUsdBalance_ShouldReturnTotalAmountOfCollateralInUsd()
@@ -879,6 +888,22 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             info.collateralPriceFeedStalenessThreshold,
             newStalenessThreshold
         );
+
+        vm.stopPrank();
+    }
+
+    function testSetCollateralRatio_ShouldSetCollateralRatio() public {
+        vm.startPrank(admin);
+
+        uint256 oldCollateralRatio = ubiquityPoolFacet.collateralRatio();
+        assertEq(oldCollateralRatio, 1_000_000);
+
+        uint256 newCollateralRatio = 900_000;
+        vm.expectEmit(address(ubiquityPoolFacet));
+        emit CollateralRatioSet(newCollateralRatio);
+        ubiquityPoolFacet.setCollateralRatio(newCollateralRatio);
+
+        assertEq(ubiquityPoolFacet.collateralRatio(), newCollateralRatio);
 
         vm.stopPrank();
     }

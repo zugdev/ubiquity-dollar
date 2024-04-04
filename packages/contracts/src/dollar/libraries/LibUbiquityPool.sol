@@ -48,6 +48,8 @@ library LibUbiquityPool {
         uint256[] collateralPriceFeedStalenessThresholds;
         // collateral index -> collateral price
         uint256[] collateralPrices;
+        // how much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision
+        uint256 collateralRatio;
         // array collateral symbols
         string[] collateralSymbols;
         // collateral address -> is it enabled
@@ -138,6 +140,8 @@ library LibUbiquityPool {
     );
     /// @notice Emitted on setting a collateral price
     event CollateralPriceSet(uint256 collateralIndex, uint256 newPrice);
+    /// @notice Emitted on setting a collateral ratio
+    event CollateralRatioSet(uint256 newCollateralRatio);
     /// @notice Emitted on enabling/disabling a particular collateral token
     event CollateralToggled(uint256 collateralIndex, bool newState);
     /// @notice Emitted when fees are updated
@@ -256,6 +260,15 @@ library LibUbiquityPool {
             poolStorage.mintingFee[index],
             poolStorage.redemptionFee[index]
         );
+    }
+
+    /**
+     * @notice Returns current collateral ratio
+     * @return Collateral ratio
+     */
+    function collateralRatio() internal view returns (uint256) {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+        return poolStorage.collateralRatio;
     }
 
     /**
@@ -776,6 +789,28 @@ library LibUbiquityPool {
             chainLinkPriceFeedAddress,
             stalenessThreshold
         );
+    }
+
+    /**
+     * @notice Sets collateral ratio
+     * @dev How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision
+     *
+     * @dev Example (1_000_000 = 100%):
+     * - Mint: user provides 1 collateral token to get 1 Dollar
+     * - Redeem: user gets 1 collateral token for 1 Dollar
+     *
+     * @dev Example (900_000 = 90%):
+     * - Mint: user provides 0.9 collateral token and 0.1 Governance token to get 1 Dollar
+     * - Redeem: user gets 0.9 collateral token and 0.1 Governance token for 1 Dollar
+     *
+     * @param newCollateralRatio New collateral ratio
+     */
+    function setCollateralRatio(uint256 newCollateralRatio) internal {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        poolStorage.collateralRatio = newCollateralRatio;
+
+        emit CollateralRatioSet(newCollateralRatio);
     }
 
     /**

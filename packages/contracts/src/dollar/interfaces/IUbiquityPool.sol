@@ -33,6 +33,12 @@ interface IUbiquityPool {
         returns (LibUbiquityPool.CollateralInformation memory returnData);
 
     /**
+     * @notice Returns current collateral ratio
+     * @return Collateral ratio
+     */
+    function collateralRatio() external view returns (uint256);
+
+    /**
      * @notice Returns USD value of all collateral tokens held in the pool, in E18
      * @return balanceTally USD value of all collateral tokens
      */
@@ -128,6 +134,12 @@ interface IUbiquityPool {
         uint256 collateralIndex
     ) external returns (uint256 collateralAmount);
 
+    /**
+     * @notice Updates collateral token price in USD from ChainLink price feed
+     * @param collateralIndex Collateral token index
+     */
+    function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
+
     //=========================
     // AMO minters functions
     //=========================
@@ -181,10 +193,20 @@ interface IUbiquityPool {
     ) external;
 
     /**
-     * @notice Updates collateral token price in USD from ChainLink price feed
-     * @param collateralIndex Collateral token index
+     * @notice Sets collateral ratio
+     * @dev How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision
+     *
+     * @dev Example (1_000_000 = 100%):
+     * - Mint: user provides 1 collateral token to get 1 Dollar
+     * - Redeem: user gets 1 collateral token for 1 Dollar
+     *
+     * @dev Example (900_000 = 90%):
+     * - Mint: user provides 0.9 collateral token and 0.1 Governance token to get 1 Dollar
+     * - Redeem: user gets 0.9 collateral token and 0.1 Governance token for 1 Dollar
+     *
+     * @param newCollateralRatio New collateral ratio
      */
-    function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
+    function setCollateralRatio(uint256 newCollateralRatio) external;
 
     /**
      * @notice Sets mint and redeem fees, 1_000_000 = 100%

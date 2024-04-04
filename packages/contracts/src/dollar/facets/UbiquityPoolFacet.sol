@@ -33,6 +33,11 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function collateralRatio() external view returns (uint256) {
+        return LibUbiquityPool.collateralRatio();
+    }
+
+    /// @inheritdoc IUbiquityPool
     function collateralUsdBalance()
         external
         view
@@ -178,6 +183,11 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
             chainLinkPriceFeedAddress,
             stalenessThreshold
         );
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function setCollateralRatio(uint256 newCollateralRatio) external onlyAdmin {
+        LibUbiquityPool.setCollateralRatio(newCollateralRatio);
     }
 
     /// @inheritdoc IUbiquityPool
