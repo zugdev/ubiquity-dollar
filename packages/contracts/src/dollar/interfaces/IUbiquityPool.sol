@@ -48,6 +48,15 @@ interface IUbiquityPool {
         returns (uint256 balanceTally);
 
     /**
+     * @notice Returns chainlink price feed information for ETH/USD pair
+     * @return Price feed address and staleness threshold in seconds
+     */
+    function ethUsdPriceFeedInformation()
+        external
+        view
+        returns (address, uint256);
+
+    /**
      * @notice Returns free collateral balance (i.e. that can be borrowed by AMO minters)
      * @param collateralIndex collateral token index
      * @return Amount of free collateral
@@ -213,6 +222,16 @@ interface IUbiquityPool {
      * @param newCollateralRatio New collateral ratio
      */
     function setCollateralRatio(uint256 newCollateralRatio) external;
+
+    /**
+     * @notice Sets chainlink params for ETH/USD price feed
+     * @param newPriceFeedAddress New chainlink price feed address for ETH/USD pair
+     * @param newStalenessThreshold New threshold in seconds when chainlink's ETH/USD price feed answer should be considered stale
+     */
+    function setEthUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) external;
 
     /**
      * @notice Sets mint and redeem fees, 1_000_000 = 100%

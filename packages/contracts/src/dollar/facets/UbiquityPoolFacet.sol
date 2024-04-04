@@ -47,6 +47,15 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function ethUsdPriceFeedInformation()
+        external
+        view
+        returns (address, uint256)
+    {
+        return LibUbiquityPool.ethUsdPriceFeedInformation();
+    }
+
+    /// @inheritdoc IUbiquityPool
     function freeCollateralBalance(
         uint256 collateralIndex
     ) external view returns (uint256) {
@@ -193,6 +202,17 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     /// @inheritdoc IUbiquityPool
     function setCollateralRatio(uint256 newCollateralRatio) external onlyAdmin {
         LibUbiquityPool.setCollateralRatio(newCollateralRatio);
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function setEthUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) external onlyAdmin {
+        LibUbiquityPool.setEthUsdChainLinkPriceFeed(
+            newPriceFeedAddress,
+            newStalenessThreshold
+        );
     }
 
     /// @inheritdoc IUbiquityPool

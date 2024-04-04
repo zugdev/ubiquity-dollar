@@ -92,6 +92,10 @@ library LibUbiquityPool {
         //====================================
         // Governance token pricing related
         //====================================
+        // chainlink price feed for ETH/USD pair
+        address ethUsdPriceFeedAddress;
+        // threshold in seconds when chainlink's ETH/USD price feed answer should be considered stale
+        uint256 ethUsdPriceFeedStalenessThreshold;
         // Curve's CurveTwocryptoOptimized contract for Governance/ETH pair
         address governanceEthPoolAddress;
     }
@@ -149,6 +153,11 @@ library LibUbiquityPool {
     event CollateralRatioSet(uint256 newCollateralRatio);
     /// @notice Emitted on enabling/disabling a particular collateral token
     event CollateralToggled(uint256 collateralIndex, bool newState);
+    /// @notice Emitted on setting chainlink's price feed for ETH/USD pair
+    event EthUsdPriceFeedSet(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    );
     /// @notice Emitted when fees are updated
     event FeesSet(
         uint256 collateralIndex,
@@ -296,6 +305,22 @@ library LibUbiquityPool {
                 .mul(poolStorage.collateralPrices[i])
                 .div(UBIQUITY_POOL_PRICE_PRECISION);
         }
+    }
+
+    /**
+     * @notice Returns chainlink price feed information for ETH/USD pair
+     * @return Price feed address and staleness threshold in seconds
+     */
+    function ethUsdPriceFeedInformation()
+        internal
+        view
+        returns (address, uint256)
+    {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+        return (
+            poolStorage.ethUsdPriceFeedAddress,
+            poolStorage.ethUsdPriceFeedStalenessThreshold
+        );
     }
 
     /**
@@ -827,6 +852,23 @@ library LibUbiquityPool {
         poolStorage.collateralRatio = newCollateralRatio;
 
         emit CollateralRatioSet(newCollateralRatio);
+    }
+
+    /**
+     * @notice Sets chainlink params for ETH/USD price feed
+     * @param newPriceFeedAddress New chainlink price feed address for ETH/USD pair
+     * @param newStalenessThreshold New threshold in seconds when chainlink's ETH/USD price feed answer should be considered stale
+     */
+    function setEthUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) internal {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        poolStorage.ethUsdPriceFeedAddress = newPriceFeedAddress;
+        poolStorage.ethUsdPriceFeedStalenessThreshold = newStalenessThreshold;
+
+        emit EthUsdPriceFeedSet(newPriceFeedAddress, newStalenessThreshold);
     }
 
     /**

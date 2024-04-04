@@ -27,6 +27,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
     MockCurveStableSwapMetaNG curveDollarMetaPool;
     MockCurveTwocryptoOptimized curveGovernanceEthPool;
     MockERC20 curveTriPoolLpToken;
+    MockChainLinkFeed ethUsdPriceFeed;
     MockERC20 wethToken;
 
     address user = address(1);
@@ -42,6 +43,10 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
     event CollateralPriceSet(uint256 collateralIndex, uint256 newPrice);
     event CollateralRatioSet(uint256 newCollateralRatio);
     event CollateralToggled(uint256 collateralIndex, bool newState);
+    event EthUsdPriceFeedSet(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    );
     event FeesSet(
         uint256 collateralIndex,
         uint256 newMintFee,
@@ -66,6 +71,9 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
 
         // init collateral price feed
         collateralTokenPriceFeed = new MockChainLinkFeed();
+
+        // init ETH/USD price feed
+        ethUsdPriceFeed = new MockChainLinkFeed();
 
         // init WETH token
         wethToken = new MockERC20("WETH", "WETH", 18);
@@ -102,10 +110,25 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             1 // answered in round
         );
 
+        // set ETH/USD price feed mock params
+        ethUsdPriceFeed.updateMockParams(
+            1, // round id
+            3000_00000000, // answer, 3000_00000000 = $3000 (8 decimals)
+            block.timestamp, // started at
+            block.timestamp, // updated at
+            1 // answered in round
+        );
+
         // set price feed for collateral token
         ubiquityPoolFacet.setCollateralChainLinkPriceFeed(
             address(collateralToken), // collateral token address
             address(collateralTokenPriceFeed), // price feed address
+            1 days // price feed staleness threshold in seconds
+        );
+
+        // set price feed for ETH/USD pair
+        ubiquityPoolFacet.setEthUsdChainLinkPriceFeed(
+            address(ethUsdPriceFeed), // price feed address
             1 days // price feed staleness threshold in seconds
         );
 
@@ -242,6 +265,15 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
 
         uint256 balanceTally = ubiquityPoolFacet.collateralUsdBalance();
         assertEq(balanceTally, 100e18);
+    }
+
+    function testEthUsdPriceFeedInformation_ShouldReturnEthUsdPriceFeedInformation()
+        public
+    {
+        (address priceFeed, uint256 stalenessThreshold) = ubiquityPoolFacet
+            .ethUsdPriceFeedInformation();
+        assertEq(priceFeed, address(ethUsdPriceFeed));
+        assertEq(stalenessThreshold, 1 days);
     }
 
     function testFreeCollateralBalance_ShouldReturnCollateralAmountAvailableForBorrowingByAmoMinters()
@@ -928,6 +960,37 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.setCollateralRatio(newCollateralRatio);
 
         assertEq(ubiquityPoolFacet.collateralRatio(), newCollateralRatio);
+
+        vm.stopPrank();
+    }
+
+    function testSetEthUsdChainLinkPriceFeed_ShouldSetEthUsdChainLinkPriceFeed()
+        public
+    {
+        vm.startPrank(admin);
+
+        (
+            address oldPriceFeedAddress,
+            uint256 oldStalenessThreshold
+        ) = ubiquityPoolFacet.ethUsdPriceFeedInformation();
+        assertEq(oldPriceFeedAddress, address(ethUsdPriceFeed));
+        assertEq(oldStalenessThreshold, 1 days);
+
+        address newPriceFeedAddress = address(1);
+        uint256 newStalenessThreshold = 2 days;
+        vm.expectEmit(address(ubiquityPoolFacet));
+        emit EthUsdPriceFeedSet(newPriceFeedAddress, newStalenessThreshold);
+        ubiquityPoolFacet.setEthUsdChainLinkPriceFeed(
+            newPriceFeedAddress,
+            newStalenessThreshold
+        );
+
+        (
+            address updatedPriceFeedAddress,
+            uint256 updatedStalenessThreshold
+        ) = ubiquityPoolFacet.ethUsdPriceFeedInformation();
+        assertEq(updatedPriceFeedAddress, newPriceFeedAddress);
+        assertEq(updatedStalenessThreshold, newStalenessThreshold);
 
         vm.stopPrank();
     }
