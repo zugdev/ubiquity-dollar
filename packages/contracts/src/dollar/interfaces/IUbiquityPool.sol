@@ -178,11 +178,12 @@ interface IUbiquityPool {
      * @dev 2. `collectRedemption()`
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being collected
+     * @return governanceAmount Amount of Governance tokens redeemed
      * @return collateralAmount Amount of collateral tokens redeemed
      */
     function collectRedemption(
         uint256 collateralIndex
-    ) external returns (uint256 collateralAmount);
+    ) external returns (uint256 governanceAmount, uint256 collateralAmount);
 
     /**
      * @notice Updates collateral token price in USD from ChainLink price feed

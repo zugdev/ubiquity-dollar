@@ -1011,18 +1011,22 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             1000000 // redeem threshold
         );
 
-        // user sends 100 collateral tokens and gets 99 Dollars (-1% mint fee)
+        // admin sets collateral ratio to 95%
+        vm.prank(admin);
+        ubiquityPoolFacet.setCollateralRatio(950_000);
+
+        // user burns 50 Governance tokens (worth $0.1) + 95 collateral tokens and gets 99 Dollars (-1% mint fee)
         vm.prank(user);
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
             99e18, // min amount of Dollars to mint
             100e18, // max collateral to send
-            0, // max Governance tokens to send
+            1100e18, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
         );
 
-        // user redeems 99 Dollars for collateral
+        // user redeems 99 Dollars for collateral and Governance tokens
         vm.prank(user);
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
@@ -1035,19 +1039,28 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         vm.roll(block.number + 3);
 
         // balances before
-        assertEq(collateralToken.balanceOf(address(ubiquityPoolFacet)), 100e18);
-        assertEq(collateralToken.balanceOf(user), 0);
+        assertEq(collateralToken.balanceOf(address(ubiquityPoolFacet)), 95e18);
+        assertEq(collateralToken.balanceOf(user), 5e18);
+        assertEq(
+            governanceToken.balanceOf(address(ubiquityPoolFacet)),
+            48510485104851048510
+        ); // ~48
+        assertEq(governanceToken.balanceOf(user), 1949999499994999950000); // ~1950
 
         vm.prank(user);
-        uint256 collateralAmount = ubiquityPoolFacet.collectRedemption(0);
-        assertEq(collateralAmount, 97.02e18); // $99 - 2% redemption fee
+        (uint256 governanceAmount, uint256 collateralAmount) = ubiquityPoolFacet
+            .collectRedemption(0);
+        assertEq(governanceAmount, 48510485104851048510); // ~48
+        assertEq(collateralAmount, 92169000000000000000); // ~92 = $95 - 2% redemption fee
 
         // balances after
         assertEq(
             collateralToken.balanceOf(address(ubiquityPoolFacet)),
-            2.98e18
-        );
-        assertEq(collateralToken.balanceOf(user), 97.02e18);
+            2.831 ether
+        ); // redemption fee left in the pool
+        assertEq(collateralToken.balanceOf(user), 97.169 ether);
+        assertEq(governanceToken.balanceOf(address(ubiquityPoolFacet)), 0);
+        assertEq(governanceToken.balanceOf(user), 1998509985099850998510); // ~1998
     }
 
     function testCollectRedemption_ShouldRevert_IfCollateralDisabled() public {

@@ -171,7 +171,11 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     /// @inheritdoc IUbiquityPool
     function collectRedemption(
         uint256 collateralIndex
-    ) external nonReentrant returns (uint256 collateralAmount) {
+    )
+        external
+        nonReentrant
+        returns (uint256 governanceAmount, uint256 collateralAmount)
+    {
         return LibUbiquityPool.collectRedemption(collateralIndex);
     }
 

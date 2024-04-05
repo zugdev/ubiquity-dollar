@@ -698,12 +698,13 @@ library LibUbiquityPool {
     }
 
     /**
-     * @notice Used to collect collateral tokens after redeeming/burning Ubiquity Dollars
+     * @notice Used to collect collateral and Governance tokens after redeeming/burning Ubiquity Dollars
      * @dev Redeem process is split in two steps:
      * @dev 1. `redeemDollar()`
      * @dev 2. `collectRedemption()`
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being collected
+     * @return governanceAmount Amount of Governance tokens redeemed
      * @return collateralAmount Amount of collateral tokens redeemed
      */
     function collectRedemption(
@@ -711,7 +712,7 @@ library LibUbiquityPool {
     )
         internal
         collateralEnabled(collateralIndex)
-        returns (uint256 collateralAmount)
+        returns (uint256 governanceAmount, uint256 collateralAmount)
     {
         UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
 
@@ -728,7 +729,17 @@ library LibUbiquityPool {
             "Too soon to collect redemption"
         );
 
+        bool sendGovernance = false;
         bool sendCollateral = false;
+
+        if (poolStorage.redeemGovernanceBalances[msg.sender] > 0) {
+            governanceAmount = poolStorage.redeemGovernanceBalances[msg.sender];
+            poolStorage.redeemGovernanceBalances[msg.sender] = 0;
+            poolStorage.unclaimedPoolGovernance = poolStorage
+                .unclaimedPoolGovernance
+                .sub(governanceAmount);
+            sendGovernance = true;
+        }
 
         if (
             poolStorage.redeemCollateralBalances[msg.sender][collateralIndex] >
@@ -746,7 +757,11 @@ library LibUbiquityPool {
             sendCollateral = true;
         }
 
-        // send out the tokens
+        // send out tokens
+        if (sendGovernance) {
+            IERC20(LibAppStorage.appStorage().governanceTokenAddress)
+                .safeTransfer(msg.sender, governanceAmount);
+        }
         if (sendCollateral) {
             IERC20(poolStorage.collateralAddresses[collateralIndex])
                 .safeTransfer(msg.sender, collateralAmount);
