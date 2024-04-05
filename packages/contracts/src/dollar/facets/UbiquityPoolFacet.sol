@@ -118,18 +118,26 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
         uint256 collateralIndex,
         uint256 dollarAmount,
         uint256 dollarOutMin,
-        uint256 maxCollateralIn
+        uint256 maxCollateralIn,
+        uint256 maxGovernanceIn,
+        bool isOneToOne
     )
         external
         nonReentrant
-        returns (uint256 totalDollarMint, uint256 collateralNeeded)
+        returns (
+            uint256 totalDollarMint,
+            uint256 collateralNeeded,
+            uint256 governanceNeeded
+        )
     {
         return
             LibUbiquityPool.mintDollar(
                 collateralIndex,
                 dollarAmount,
                 dollarOutMin,
-                maxCollateralIn
+                maxCollateralIn,
+                maxGovernanceIn,
+                isOneToOne
             );
     }
 

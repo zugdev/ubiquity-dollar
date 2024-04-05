@@ -461,44 +461,79 @@ library LibUbiquityPool {
      * @param dollarAmount Amount of dollars to mint
      * @param dollarOutMin Min amount of dollars to mint (slippage protection)
      * @param maxCollateralIn Max amount of collateral to send (slippage protection)
+     * @param maxGovernanceIn Max amount of Governance tokens to send (slippage protection)
+     * @param isOneToOne Force providing only collateral without Governance tokens
      * @return totalDollarMint Amount of Dollars minted
      * @return collateralNeeded Amount of collateral sent to the pool
+     * @return governanceNeeded Amount of Governance tokens burnt from sender
      */
     function mintDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
         uint256 dollarOutMin,
-        uint256 maxCollateralIn
+        uint256 maxCollateralIn,
+        uint256 maxGovernanceIn,
+        bool isOneToOne
     )
         internal
         collateralEnabled(collateralIndex)
-        returns (uint256 totalDollarMint, uint256 collateralNeeded)
+        returns (
+            uint256 totalDollarMint,
+            uint256 collateralNeeded,
+            uint256 governanceNeeded
+        )
     {
-        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
-
         require(
-            poolStorage.isMintPaused[collateralIndex] == false,
+            ubiquityPoolStorage().isMintPaused[collateralIndex] == false,
             "Minting is paused"
         );
-
         // prevent unnecessary mints
         require(
-            getDollarPriceUsd() >= poolStorage.mintPriceThreshold,
+            getDollarPriceUsd() >= ubiquityPoolStorage().mintPriceThreshold,
             "Dollar price too low"
         );
 
         // update collateral price
         updateChainLinkCollateralPrice(collateralIndex);
 
-        // get amount of collateral for minting Dollars
-        collateralNeeded = getDollarInCollateral(collateralIndex, dollarAmount);
-        require(collateralNeeded > 0, "Cannot mint with zero collateral");
+        // user forces 1-to-1 override or collateral ratio >= 100%
+        if (
+            isOneToOne ||
+            ubiquityPoolStorage().collateralRatio >=
+            UBIQUITY_POOL_PRICE_PRECISION
+        ) {
+            // get amount of collateral for minting Dollars
+            collateralNeeded = getDollarInCollateral(
+                collateralIndex,
+                dollarAmount
+            );
+            governanceNeeded = 0;
+        } else if (ubiquityPoolStorage().collateralRatio == 0) {
+            // collateral ratio is 0%, Dollar tokens can be minted by providing only Governance tokens (i.e. fully algorithmic stablecoin)
+            collateralNeeded = 0;
+            governanceNeeded = dollarAmount
+                .mul(UBIQUITY_POOL_PRICE_PRECISION)
+                .div(getGovernancePriceUsd());
+        } else {
+            // fractional, user has to provide both collateral and Governance tokens
+            uint256 dollarForCollateral = dollarAmount
+                .mul(ubiquityPoolStorage().collateralRatio)
+                .div(UBIQUITY_POOL_PRICE_PRECISION);
+            uint256 dollarForGovernance = dollarAmount.sub(dollarForCollateral);
+            collateralNeeded = getDollarInCollateral(
+                collateralIndex,
+                dollarForCollateral
+            );
+            governanceNeeded = dollarForGovernance
+                .mul(UBIQUITY_POOL_PRICE_PRECISION)
+                .div(getGovernancePriceUsd());
+        }
 
         // subtract the minting fee
         totalDollarMint = dollarAmount
             .mul(
                 UBIQUITY_POOL_PRICE_PRECISION.sub(
-                    poolStorage.mintingFee[collateralIndex]
+                    ubiquityPoolStorage().mintingFee[collateralIndex]
                 )
             )
             .div(UBIQUITY_POOL_PRICE_PRECISION);
@@ -506,23 +541,26 @@ library LibUbiquityPool {
         // check slippages
         require((totalDollarMint >= dollarOutMin), "Dollar slippage");
         require((collateralNeeded <= maxCollateralIn), "Collateral slippage");
+        require((governanceNeeded <= maxGovernanceIn), "Governance slippage");
 
         // check the pool ceiling
         require(
             freeCollateralBalance(collateralIndex).add(collateralNeeded) <=
-                poolStorage.poolCeilings[collateralIndex],
+                ubiquityPoolStorage().poolCeilings[collateralIndex],
             "Pool ceiling"
         );
 
-        // take collateral first
-        IERC20(poolStorage.collateralAddresses[collateralIndex])
+        // burn Governance tokens from sender and send collateral to the pool
+        IERC20Ubiquity(LibAppStorage.appStorage().governanceTokenAddress)
+            .burnFrom(msg.sender, governanceNeeded);
+        IERC20(ubiquityPoolStorage().collateralAddresses[collateralIndex])
             .safeTransferFrom(msg.sender, address(this), collateralNeeded);
 
         // mint Dollars
-        IERC20Ubiquity ubiquityDollarToken = IERC20Ubiquity(
-            LibAppStorage.appStorage().dollarTokenAddress
+        IERC20Ubiquity(LibAppStorage.appStorage().dollarTokenAddress).mint(
+            msg.sender,
+            totalDollarMint
         );
-        ubiquityDollarToken.mint(msg.sender, totalDollarMint);
     }
 
     /**

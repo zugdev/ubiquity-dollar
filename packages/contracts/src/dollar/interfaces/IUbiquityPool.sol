@@ -122,15 +122,26 @@ interface IUbiquityPool {
      * @param dollarAmount Amount of dollars to mint
      * @param dollarOutMin Min amount of dollars to mint (slippage protection)
      * @param maxCollateralIn Max amount of collateral to send (slippage protection)
+     * @param maxGovernanceIn Max amount of Governance tokens to send (slippage protection)
+     * @param isOneToOne Force providing only collateral without Governance tokens
      * @return totalDollarMint Amount of Dollars minted
      * @return collateralNeeded Amount of collateral sent to the pool
+     * @return governanceNeeded Amount of Governance tokens burnt from sender
      */
     function mintDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
         uint256 dollarOutMin,
-        uint256 maxCollateralIn
-    ) external returns (uint256 totalDollarMint, uint256 collateralNeeded);
+        uint256 maxCollateralIn,
+        uint256 maxGovernanceIn,
+        bool isOneToOne
+    )
+        external
+        returns (
+            uint256 totalDollarMint,
+            uint256 collateralNeeded,
+            uint256 governanceNeeded
+        );
 
     /**
      * @notice Burns redeemable Ubiquity Dollars and sends back 1 USD of collateral token for every 1 Ubiquity Dollar burned

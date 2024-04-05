@@ -446,9 +446,13 @@ abstract contract DiamondTestSetup is DiamondTestHelper, UUPSTestHelper {
             CREDIT_TOKEN_BURNER_ROLE,
             address(diamond)
         );
-        // grant diamond token admin rights
+        // grant diamond Governance token admin and burner rights
         accessControlFacet.grantRole(
             GOVERNANCE_TOKEN_MANAGER_ROLE,
+            address(diamond)
+        );
+        accessControlFacet.grantRole(
+            GOVERNANCE_TOKEN_BURNER_ROLE,
             address(diamond)
         );
         // grant diamond token minter rights
