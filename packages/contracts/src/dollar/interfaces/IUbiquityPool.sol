@@ -107,6 +107,15 @@ interface IUbiquityPool {
     ) external view returns (uint256);
 
     /**
+     * @notice Returns user's Governance tokens balance available for redemption
+     * @param userAddress User address
+     * @return User's Governance tokens balance available for redemption
+     */
+    function getRedeemGovernanceBalance(
+        address userAddress
+    ) external view returns (uint256);
+
+    /**
      * @notice Returns pool address for Governance/ETH pair
      * @return Pool address
      */
@@ -151,14 +160,16 @@ interface IUbiquityPool {
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being withdrawn
      * @param dollarAmount Amount of Ubiquity Dollars being burned
+     * @param governanceOutMin Minimum amount of Governance tokens that'll be withdrawn, used to set acceptable slippage
      * @param collateralOutMin Minimum amount of collateral tokens that'll be withdrawn, used to set acceptable slippage
      * @return collateralOut Amount of collateral tokens ready for redemption
      */
     function redeemDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
+        uint256 governanceOutMin,
         uint256 collateralOutMin
-    ) external returns (uint256 collateralOut);
+    ) external returns (uint256 collateralOut, uint256 governanceOut);
 
     /**
      * @notice Used to collect collateral tokens after redeeming/burning Ubiquity Dollars

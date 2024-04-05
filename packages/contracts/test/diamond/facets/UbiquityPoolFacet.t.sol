@@ -308,6 +308,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 
@@ -398,12 +399,52 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 
         uint256 redeemCollateralBalance = ubiquityPoolFacet
             .getRedeemCollateralBalance(user, 0);
         assertEq(redeemCollateralBalance, 97.02e18);
+    }
+
+    function testGetRedeemGovernanceBalance_ShouldReturnRedeemGovernanceBalance()
+        public
+    {
+        vm.prank(admin);
+        ubiquityPoolFacet.setPriceThresholds(
+            1000000, // mint threshold
+            1000000 // redeem threshold
+        );
+
+        // admin sets collateral ratio to 0%
+        vm.prank(admin);
+        ubiquityPoolFacet.setCollateralRatio(0);
+
+        // user burns 1000 Governance tokens and gets 99 Dollars (-1% mint fee)
+        vm.prank(user);
+        ubiquityPoolFacet.mintDollar(
+            0, // collateral index
+            100e18, // Dollar amount
+            99e18, // min amount of Dollars to mint
+            0, // max collateral to send
+            1100e18, // max Governance tokens to send
+            false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+        );
+
+        // user redeems 99 Dollars
+        vm.prank(user);
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            99e18, // Dollar amount
+            0, // min Governance out
+            0 // min collateral out
+        );
+
+        assertEq(
+            ubiquityPoolFacet.getRedeemGovernanceBalance(user),
+            970209702097020970209
+        );
     }
 
     function testGovernanceEthPoolAddress_ShouldReturnGovernanceEthPoolAddress()
@@ -695,6 +736,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             100e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
     }
@@ -705,6 +747,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             100e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
     }
@@ -723,6 +766,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             100e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
     }
@@ -750,11 +794,46 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             100e18, // Dollar amount
+            0, // min Governance out
             100e18 // min collateral out
         );
     }
 
-    function testRedeemDollar_ShouldRedeemCollateral() public {
+    function testRedeemDollar_ShouldRevert_OnGovernanceSlippage() public {
+        vm.prank(admin);
+        ubiquityPoolFacet.setPriceThresholds(
+            1000000, // mint threshold
+            1000000 // redeem threshold
+        );
+
+        // admin sets collateral ratio to 0%
+        vm.prank(admin);
+        ubiquityPoolFacet.setCollateralRatio(0);
+
+        // user burns ~1000 Governance tokens and gets 99 Dollars (-1% mint fee)
+        vm.prank(user);
+        ubiquityPoolFacet.mintDollar(
+            0, // collateral index
+            100e18, // Dollar amount
+            99e18, // min amount of Dollars to mint
+            0, // max collateral to send
+            1100e18, // max Governance tokens to send
+            false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+        );
+
+        vm.prank(user);
+        vm.expectRevert("Governance slippage");
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            99e18, // Dollar amount
+            1100e18, // min Governance out
+            0 // min collateral out
+        );
+    }
+
+    function testRedeemDollar_ShouldRedeemCollateral_IfCollateralRatioIs100()
+        public
+    {
         vm.prank(admin);
         ubiquityPoolFacet.setPriceThresholds(
             1000000, // mint threshold
@@ -774,16 +853,137 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
 
         // balances before
         assertEq(dollarToken.balanceOf(user), 99e18);
+        assertEq(governanceToken.balanceOf(user), 2000e18);
+        assertEq(governanceToken.balanceOf(address(ubiquityPoolFacet)), 0);
+        assertEq(ubiquityPoolFacet.getRedeemCollateralBalance(user, 0), 0);
+        assertEq(ubiquityPoolFacet.getRedeemGovernanceBalance(user), 0);
 
         vm.prank(user);
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 
         // balances after
         assertEq(dollarToken.balanceOf(user), 0);
+        assertEq(governanceToken.balanceOf(user), 2000e18);
+        assertEq(governanceToken.balanceOf(address(ubiquityPoolFacet)), 0);
+        assertEq(
+            ubiquityPoolFacet.getRedeemCollateralBalance(user, 0),
+            97.02 ether
+        );
+        assertEq(ubiquityPoolFacet.getRedeemGovernanceBalance(user), 0);
+    }
+
+    function testRedeemDollar_ShouldRedeemCollateral_IfCollateralRatioIs0()
+        public
+    {
+        vm.prank(admin);
+        ubiquityPoolFacet.setPriceThresholds(
+            1000000, // mint threshold
+            1000000 // redeem threshold
+        );
+
+        // admin sets collateral ratio to 0%
+        vm.prank(admin);
+        ubiquityPoolFacet.setCollateralRatio(0);
+
+        // user burns 1000 Governance tokens and gets 99 Dollars (-1% mint fee)
+        vm.prank(user);
+        ubiquityPoolFacet.mintDollar(
+            0, // collateral index
+            100e18, // Dollar amount
+            99e18, // min amount of Dollars to mint
+            0, // max collateral to send
+            1100e18, // max Governance tokens to send
+            false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+        );
+
+        // balances before
+        assertEq(dollarToken.balanceOf(user), 99e18);
+        assertEq(governanceToken.balanceOf(user), 999989999899998999990);
+        assertEq(governanceToken.balanceOf(address(ubiquityPoolFacet)), 0);
+        assertEq(ubiquityPoolFacet.getRedeemCollateralBalance(user, 0), 0);
+        assertEq(ubiquityPoolFacet.getRedeemGovernanceBalance(user), 0);
+
+        vm.prank(user);
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            99e18, // Dollar amount
+            0, // min Governance out
+            0 // min collateral out
+        );
+
+        // balances after
+        assertEq(dollarToken.balanceOf(user), 0);
+        assertEq(governanceToken.balanceOf(user), 999989999899998999990);
+        assertEq(
+            governanceToken.balanceOf(address(ubiquityPoolFacet)),
+            970209702097020970209
+        );
+        assertEq(ubiquityPoolFacet.getRedeemCollateralBalance(user, 0), 0);
+        assertEq(
+            ubiquityPoolFacet.getRedeemGovernanceBalance(user),
+            970209702097020970209
+        );
+    }
+
+    function testRedeemDollar_ShouldRedeemCollateral_IfCollateralRatioIs95()
+        public
+    {
+        vm.prank(admin);
+        ubiquityPoolFacet.setPriceThresholds(
+            1000000, // mint threshold
+            1000000 // redeem threshold
+        );
+
+        // admin sets collateral ratio to 95%
+        vm.prank(admin);
+        ubiquityPoolFacet.setCollateralRatio(950_000);
+
+        // user burns 50 Governance tokens (worth $0.1) + 95 collateral tokens and gets 99 Dollars (-1% mint fee)
+        vm.prank(user);
+        ubiquityPoolFacet.mintDollar(
+            0, // collateral index
+            100e18, // Dollar amount
+            99e18, // min amount of Dollars to mint
+            100e18, // max collateral to send
+            1100e18, // max Governance tokens to send
+            false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+        );
+
+        // balances before
+        assertEq(dollarToken.balanceOf(user), 99e18);
+        assertEq(governanceToken.balanceOf(user), 1949999499994999950000); // ~1950
+        assertEq(governanceToken.balanceOf(address(ubiquityPoolFacet)), 0);
+        assertEq(ubiquityPoolFacet.getRedeemCollateralBalance(user, 0), 0);
+        assertEq(ubiquityPoolFacet.getRedeemGovernanceBalance(user), 0);
+
+        vm.prank(user);
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            99e18, // Dollar amount
+            0, // min Governance out
+            0 // min collateral out
+        );
+
+        // balances after
+        assertEq(dollarToken.balanceOf(user), 0);
+        assertEq(governanceToken.balanceOf(user), 1949999499994999950000); // ~1950
+        assertEq(
+            governanceToken.balanceOf(address(ubiquityPoolFacet)),
+            48510485104851048510
+        ); // ~48.5
+        assertEq(
+            ubiquityPoolFacet.getRedeemCollateralBalance(user, 0),
+            92169000000000000000
+        ); // ~92
+        assertEq(
+            ubiquityPoolFacet.getRedeemGovernanceBalance(user),
+            48510485104851048510
+        ); // ~48.5
     }
 
     function testCollectRedemption_ShouldRevert_IfRedeemingIsPaused() public {
@@ -827,6 +1027,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 
@@ -870,6 +1071,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 
@@ -997,6 +1199,7 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
         ubiquityPoolFacet.redeemDollar(
             0, // collateral index
             99e18, // Dollar amount
+            0, // min Governance out
             90e18 // min collateral out
         );
 

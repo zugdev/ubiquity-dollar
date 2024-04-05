@@ -70,10 +70,14 @@ library LibUbiquityPool {
         uint256 redeemPriceThreshold;
         // address -> collateral index -> balance
         mapping(address user => mapping(uint256 collateralIndex => uint256 amount)) redeemCollateralBalances;
+        // address -> balance
+        mapping(address user => uint256 amount) redeemGovernanceBalances;
         // number of blocks to wait before being able to collectRedemption()
         uint256 redemptionDelayBlocks;
         // collateral index -> balance
         uint256[] unclaimedPoolCollateral;
+        // total amount of unclaimed Governance tokens in the pool
+        uint256 unclaimedPoolGovernance;
         //================
         // Fees related
         //================
@@ -443,6 +447,18 @@ library LibUbiquityPool {
     }
 
     /**
+     * @notice Returns user's Governance tokens balance available for redemption
+     * @param userAddress User address
+     * @return User's Governance tokens balance available for redemption
+     */
+    function getRedeemGovernanceBalance(
+        address userAddress
+    ) internal view returns (uint256) {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+        return poolStorage.redeemGovernanceBalances[userAddress];
+    }
+
+    /**
      * @notice Returns pool address for Governance/ETH pair
      * @return Pool address
      */
@@ -571,17 +587,19 @@ library LibUbiquityPool {
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being withdrawn
      * @param dollarAmount Amount of Ubiquity Dollars being burned
+     * @param governanceOutMin Minimum amount of Governance tokens that'll be withdrawn, used to set acceptable slippage
      * @param collateralOutMin Minimum amount of collateral tokens that'll be withdrawn, used to set acceptable slippage
      * @return collateralOut Amount of collateral tokens ready for redemption
      */
     function redeemDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
+        uint256 governanceOutMin,
         uint256 collateralOutMin
     )
         internal
         collateralEnabled(collateralIndex)
-        returns (uint256 collateralOut)
+        returns (uint256 collateralOut, uint256 governanceOut)
     {
         UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
 
@@ -607,8 +625,33 @@ library LibUbiquityPool {
         // update collateral price
         updateChainLinkCollateralPrice(collateralIndex);
 
-        // get collateral output for incoming Dollars
-        collateralOut = getDollarInCollateral(collateralIndex, dollarAfterFee);
+        // get current collateral ratio
+        uint256 currentCollateralRatio = poolStorage.collateralRatio;
+
+        // fully collateralized
+        if (currentCollateralRatio >= UBIQUITY_POOL_PRICE_PRECISION) {
+            // get collateral output for incoming Dollars
+            collateralOut = getDollarInCollateral(
+                collateralIndex,
+                dollarAfterFee
+            );
+            governanceOut = 0;
+        } else if (currentCollateralRatio == 0) {
+            // algorithmic, fully covered by Governance tokens
+            collateralOut = 0;
+            governanceOut = dollarAfterFee
+                .mul(UBIQUITY_POOL_PRICE_PRECISION)
+                .div(getGovernancePriceUsd());
+        } else {
+            // fractional, partially covered by collateral and Governance tokens
+            collateralOut = getDollarInCollateral(
+                collateralIndex,
+                dollarAfterFee
+            ).mul(currentCollateralRatio).div(UBIQUITY_POOL_PRICE_PRECISION);
+            governanceOut = dollarAfterFee
+                .mul(UBIQUITY_POOL_PRICE_PRECISION.sub(currentCollateralRatio))
+                .div(getGovernancePriceUsd());
+        }
 
         // checks
         require(
@@ -619,8 +662,9 @@ library LibUbiquityPool {
             "Insufficient pool collateral"
         );
         require(collateralOut >= collateralOutMin, "Collateral slippage");
+        require(governanceOut >= governanceOutMin, "Governance slippage");
 
-        // account for the redeem delay
+        // increase collateral redemption balances
         poolStorage.redeemCollateralBalances[msg.sender][
             collateralIndex
         ] = poolStorage
@@ -631,13 +675,26 @@ library LibUbiquityPool {
             .unclaimedPoolCollateral[collateralIndex]
             .add(collateralOut);
 
+        // increase Governance redemption balances
+        poolStorage.redeemGovernanceBalances[msg.sender] = poolStorage
+            .redeemGovernanceBalances[msg.sender]
+            .add(governanceOut);
+        poolStorage.unclaimedPoolGovernance = poolStorage
+            .unclaimedPoolGovernance
+            .add(governanceOut);
+
         poolStorage.lastRedeemedBlock[msg.sender] = block.number;
 
         // burn Dollars
-        IERC20Ubiquity ubiquityDollarToken = IERC20Ubiquity(
-            LibAppStorage.appStorage().dollarTokenAddress
+        IERC20Ubiquity(LibAppStorage.appStorage().dollarTokenAddress).burnFrom(
+            msg.sender,
+            dollarAmount
         );
-        ubiquityDollarToken.burnFrom(msg.sender, dollarAmount);
+        // mint Governance tokens to this address
+        IERC20Ubiquity(LibAppStorage.appStorage().governanceTokenAddress).mint(
+            address(this),
+            governanceOut
+        );
     }
 
     /**

@@ -105,6 +105,13 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function getRedeemGovernanceBalance(
+        address userAddress
+    ) external view returns (uint256) {
+        return LibUbiquityPool.getRedeemGovernanceBalance(userAddress);
+    }
+
+    /// @inheritdoc IUbiquityPool
     function governanceEthPoolAddress() external view returns (address) {
         return LibUbiquityPool.governanceEthPoolAddress();
     }
@@ -145,12 +152,18 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     function redeemDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
+        uint256 governanceOutMin,
         uint256 collateralOutMin
-    ) external nonReentrant returns (uint256 collateralOut) {
+    )
+        external
+        nonReentrant
+        returns (uint256 collateralOut, uint256 governanceOut)
+    {
         return
             LibUbiquityPool.redeemDollar(
                 collateralIndex,
                 dollarAmount,
+                governanceOutMin,
                 collateralOutMin
             );
     }
