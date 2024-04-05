@@ -7,6 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ICurveStableSwapMetaNG} from "../interfaces/ICurveStableSwapMetaNG.sol";
+import {ICurveTwocryptoOptimized} from "../interfaces/ICurveTwocryptoOptimized.sol";
 import {IDollarAmoMinter} from "../interfaces/IDollarAmoMinter.sol";
 import {IERC20Ubiquity} from "../interfaces/IERC20Ubiquity.sol";
 import {UBIQUITY_POOL_PRICE_PRECISION} from "./Constants.sol";
@@ -375,6 +376,55 @@ library LibUbiquityPool {
         dollarPriceUsd = dollarPriceUsdD18
             .mul(UBIQUITY_POOL_PRICE_PRECISION)
             .div(1e18);
+    }
+
+    /**
+     * @notice Returns Governance token price in USD (6 decimals precision)
+     * @dev How it works:
+     * 1. Fetch ETH/USD price from chainlink oracle
+     * 2. Fetch Governance/ETH price from Curve's oracle
+     * 3. Calculate Governance token price in USD
+     * @return governancePriceUsd Governance token price in USD
+     */
+    function getGovernancePriceUsd()
+        internal
+        view
+        returns (uint256 governancePriceUsd)
+    {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        // fetch latest ETH/USD price
+        AggregatorV3Interface ethUsdPriceFeed = AggregatorV3Interface(
+            poolStorage.ethUsdPriceFeedAddress
+        );
+        (, int256 answer, , uint256 updatedAt, ) = ethUsdPriceFeed
+            .latestRoundData();
+        uint256 ethUsdPriceFeedDecimals = ethUsdPriceFeed.decimals();
+
+        // validate ETH/USD chainlink response
+        require(answer > 0, "Invalid price");
+        require(
+            block.timestamp - updatedAt <
+                poolStorage.ethUsdPriceFeedStalenessThreshold,
+            "Stale data"
+        );
+
+        // convert ETH/USD chainlink price to 6 decimals
+        uint256 ethUsdPrice = uint256(answer)
+            .mul(UBIQUITY_POOL_PRICE_PRECISION)
+            .div(10 ** ethUsdPriceFeedDecimals);
+
+        // fetch ETH/Governance price (18 decimals)
+        uint256 ethGovernancePriceD18 = ICurveTwocryptoOptimized(
+            poolStorage.governanceEthPoolAddress
+        ).price_oracle();
+        // calculate Governance/ETH price (18 decimals)
+        uint256 governanceEthPriceD18 = uint256(1e18).mul(1e18).div(
+            ethGovernancePriceD18
+        );
+
+        // calculate Governance token price in USD (6 decimals)
+        governancePriceUsd = governanceEthPriceD18.mul(ethUsdPrice).div(1e18);
     }
 
     /**

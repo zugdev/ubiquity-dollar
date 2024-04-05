@@ -83,6 +83,19 @@ interface IUbiquityPool {
     function getDollarPriceUsd() external view returns (uint256 dollarPriceUsd);
 
     /**
+     * @notice Returns Governance token price in USD (6 decimals precision)
+     * @dev How it works:
+     * 1. Fetch ETH/USD price from chainlink oracle
+     * 2. Fetch Governance/ETH price from Curve's oracle
+     * 3. Calculate Governance token price in USD
+     * @return governancePriceUsd Governance token price in USD
+     */
+    function getGovernancePriceUsd()
+        external
+        view
+        returns (uint256 governancePriceUsd);
+
+    /**
      * @notice Returns user's balance available for redemption
      * @param userAddress User address
      * @param collateralIndex Collateral token index

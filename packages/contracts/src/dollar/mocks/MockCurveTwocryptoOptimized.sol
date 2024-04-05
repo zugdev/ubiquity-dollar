@@ -12,4 +12,8 @@ contract MockCurveTwocryptoOptimized is
         address _token0,
         address _token1
     ) MockCurveStableSwapMetaNG(_token0, _token1) {}
+
+    function price_oracle() external view returns (uint256) {
+        return priceOracle;
+    }
 }

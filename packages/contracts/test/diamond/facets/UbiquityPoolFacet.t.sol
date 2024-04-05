@@ -119,6 +119,9 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
             1 // answered in round
         );
 
+        // set ETH/Governance price to 30k in Curve pool mock
+        curveGovernanceEthPool.updateMockParams(30_000e18);
+
         // set price feed for collateral token
         ubiquityPoolFacet.setCollateralChainLinkPriceFeed(
             address(collateralToken), // collateral token address
@@ -318,6 +321,50 @@ contract UbiquityPoolFacetTest is DiamondTestSetup {
     function testGetDollarPriceUsd_ShouldReturnDollarPriceInUsd() public {
         uint256 dollarPriceUsd = ubiquityPoolFacet.getDollarPriceUsd();
         assertEq(dollarPriceUsd, 1_000_000);
+    }
+
+    function testGetGovernancePriceUsd_ShouldRevertOnInvalidChainlinkAnswer()
+        public
+    {
+        // set invalid answer from chainlink
+        ethUsdPriceFeed.updateMockParams(
+            1, // round id
+            0, // invalid answer
+            block.timestamp, // started at
+            block.timestamp, // updated at
+            1 // answered in round
+        );
+
+        vm.expectRevert("Invalid price");
+        ubiquityPoolFacet.getGovernancePriceUsd();
+    }
+
+    function testGetGovernancePriceUsd_ShouldRevertIfChainlinkAnswerIsStale()
+        public
+    {
+        // set stale answer from chainlink
+        collateralTokenPriceFeed.updateMockParams(
+            1, // round id
+            100_000_000, // answer, 100_000_000 = $1.00
+            block.timestamp, // started at
+            block.timestamp, // updated at
+            1 // answered in round
+        );
+
+        // wait 1 day
+        vm.warp(block.timestamp + 1 days);
+
+        vm.expectRevert("Stale data");
+        ubiquityPoolFacet.getGovernancePriceUsd();
+    }
+
+    function testGetGovernancePriceUsd_ShouldReturnGovernanceTokenPriceInUsd()
+        public
+    {
+        uint256 governancePriceUsd = ubiquityPoolFacet.getGovernancePriceUsd();
+        // 1 ETH = $3000, 1 ETH = 30_000 Governance tokens
+        // Governance token USD price = (1 / 30000) * 3000 = 0.1
+        assertEq(governancePriceUsd, 99999); // ~$0.09
     }
 
     function testGetRedeemCollateralBalance_ShouldReturnRedeemCollateralBalance()
