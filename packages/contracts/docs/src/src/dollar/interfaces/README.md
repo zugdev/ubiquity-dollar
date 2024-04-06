@@ -11,6 +11,7 @@
 - [ICurveFactory](ICurveFactory.sol/interface.ICurveFactory.md)
 - [ICurveStableSwapFactoryNG](ICurveStableSwapFactoryNG.sol/interface.ICurveStableSwapFactoryNG.md)
 - [ICurveStableSwapMetaNG](ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md)
+- [ICurveTwocryptoOptimized](ICurveTwocryptoOptimized.sol/interface.ICurveTwocryptoOptimized.md)
 - [IDepositZap](IDepositZap.sol/interface.IDepositZap.md)
 - [IDiamondCut](IDiamondCut.sol/interface.IDiamondCut.md)
 - [IDiamondLoupe](IDiamondLoupe.sol/interface.IDiamondLoupe.md)
