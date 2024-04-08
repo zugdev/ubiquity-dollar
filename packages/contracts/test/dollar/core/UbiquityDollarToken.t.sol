@@ -90,8 +90,8 @@ contract UbiquityDollarTokenTest is LocalTestHelper {
     }
 
     function testUUPS_InitializedVersion() external {
-        uint expectedVersion = 1;
-        uint baseExpectedVersion = 255;
+        uint256 expectedVersion = 1;
+        uint256 baseExpectedVersion = 255;
 
         UbiquityDollarTokenUpgraded newImpl = new UbiquityDollarTokenUpgraded();
         UbiquityDollarTokenUpgraded newImplT = new UbiquityDollarTokenUpgraded();
@@ -166,9 +166,9 @@ contract UbiquityDollarTokenTest is LocalTestHelper {
         );
         bool hasUpgraded = abi.decode(data, (bool));
 
-        assertEq(hasUpgraded, true, "should have upgraded");
-        assertEq(success, true, "should have upgraded");
-        require(success == true, "should have upgraded");
+        assertEq(hasUpgraded, true, "upgrade succeed");
+        assertEq(success, true, "upgrade succeed");
+        require(success == true, "upgrade succeed");
     }
 }
 
