@@ -1,5 +1,5 @@
 # ICurveStableSwapFactoryNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/interfaces/ICurveStableSwapFactoryNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/92bc5664236b6ca4617eb576771a708a6060bc2e/src/dollar/interfaces/ICurveStableSwapFactoryNG.sol)
 
 Factory allows the permissionless deployment of up to
 eight-coin plain pools (ex: DAI-USDT-USDC) and metapools (ex: USDT-3CRV).

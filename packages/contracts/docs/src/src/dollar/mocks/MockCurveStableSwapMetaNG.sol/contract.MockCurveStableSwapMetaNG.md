@@ -1,5 +1,5 @@
 # MockCurveStableSwapMetaNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/mocks/MockCurveStableSwapMetaNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/92bc5664236b6ca4617eb576771a708a6060bc2e/src/dollar/mocks/MockCurveStableSwapMetaNG.sol)
 
 **Inherits:**
 [ICurveStableSwapMetaNG](/src/dollar/interfaces/ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md), [MockERC20](/src/dollar/mocks/MockERC20.sol/contract.MockERC20.md)

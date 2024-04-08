@@ -33,12 +33,26 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function collateralRatio() external view returns (uint256) {
+        return LibUbiquityPool.collateralRatio();
+    }
+
+    /// @inheritdoc IUbiquityPool
     function collateralUsdBalance()
         external
         view
         returns (uint256 balanceTally)
     {
         return LibUbiquityPool.collateralUsdBalance();
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function ethUsdPriceFeedInformation()
+        external
+        view
+        returns (address, uint256)
+    {
+        return LibUbiquityPool.ethUsdPriceFeedInformation();
     }
 
     /// @inheritdoc IUbiquityPool
@@ -70,6 +84,15 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function getGovernancePriceUsd()
+        external
+        view
+        returns (uint256 governancePriceUsd)
+    {
+        return LibUbiquityPool.getGovernancePriceUsd();
+    }
+
+    /// @inheritdoc IUbiquityPool
     function getRedeemCollateralBalance(
         address userAddress,
         uint256 collateralIndex
@@ -81,6 +104,18 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
             );
     }
 
+    /// @inheritdoc IUbiquityPool
+    function getRedeemGovernanceBalance(
+        address userAddress
+    ) external view returns (uint256) {
+        return LibUbiquityPool.getRedeemGovernanceBalance(userAddress);
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function governanceEthPoolAddress() external view returns (address) {
+        return LibUbiquityPool.governanceEthPoolAddress();
+    }
+
     //====================
     // Public functions
     //====================
@@ -90,18 +125,26 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
         uint256 collateralIndex,
         uint256 dollarAmount,
         uint256 dollarOutMin,
-        uint256 maxCollateralIn
+        uint256 maxCollateralIn,
+        uint256 maxGovernanceIn,
+        bool isOneToOne
     )
         external
         nonReentrant
-        returns (uint256 totalDollarMint, uint256 collateralNeeded)
+        returns (
+            uint256 totalDollarMint,
+            uint256 collateralNeeded,
+            uint256 governanceNeeded
+        )
     {
         return
             LibUbiquityPool.mintDollar(
                 collateralIndex,
                 dollarAmount,
                 dollarOutMin,
-                maxCollateralIn
+                maxCollateralIn,
+                maxGovernanceIn,
+                isOneToOne
             );
     }
 
@@ -109,12 +152,18 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     function redeemDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
+        uint256 governanceOutMin,
         uint256 collateralOutMin
-    ) external nonReentrant returns (uint256 collateralOut) {
+    )
+        external
+        nonReentrant
+        returns (uint256 collateralOut, uint256 governanceOut)
+    {
         return
             LibUbiquityPool.redeemDollar(
                 collateralIndex,
                 dollarAmount,
+                governanceOutMin,
                 collateralOutMin
             );
     }
@@ -122,7 +171,11 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     /// @inheritdoc IUbiquityPool
     function collectRedemption(
         uint256 collateralIndex
-    ) external nonReentrant returns (uint256 collateralAmount) {
+    )
+        external
+        nonReentrant
+        returns (uint256 governanceAmount, uint256 collateralAmount)
+    {
         return LibUbiquityPool.collectRedemption(collateralIndex);
     }
 
@@ -181,12 +234,37 @@ contract UbiquityPoolFacet is IUbiquityPool, Modifiers {
     }
 
     /// @inheritdoc IUbiquityPool
+    function setCollateralRatio(uint256 newCollateralRatio) external onlyAdmin {
+        LibUbiquityPool.setCollateralRatio(newCollateralRatio);
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function setEthUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) external onlyAdmin {
+        LibUbiquityPool.setEthUsdChainLinkPriceFeed(
+            newPriceFeedAddress,
+            newStalenessThreshold
+        );
+    }
+
+    /// @inheritdoc IUbiquityPool
     function setFees(
         uint256 collateralIndex,
         uint256 newMintFee,
         uint256 newRedeemFee
     ) external onlyAdmin {
         LibUbiquityPool.setFees(collateralIndex, newMintFee, newRedeemFee);
+    }
+
+    /// @inheritdoc IUbiquityPool
+    function setGovernanceEthPoolAddress(
+        address newGovernanceEthPoolAddress
+    ) external onlyAdmin {
+        LibUbiquityPool.setGovernanceEthPoolAddress(
+            newGovernanceEthPoolAddress
+        );
     }
 
     /// @inheritdoc IUbiquityPool

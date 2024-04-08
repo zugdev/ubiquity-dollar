@@ -33,6 +33,12 @@ interface IUbiquityPool {
         returns (LibUbiquityPool.CollateralInformation memory returnData);
 
     /**
+     * @notice Returns current collateral ratio
+     * @return Collateral ratio
+     */
+    function collateralRatio() external view returns (uint256);
+
+    /**
      * @notice Returns USD value of all collateral tokens held in the pool, in E18
      * @return balanceTally USD value of all collateral tokens
      */
@@ -40,6 +46,15 @@ interface IUbiquityPool {
         external
         view
         returns (uint256 balanceTally);
+
+    /**
+     * @notice Returns chainlink price feed information for ETH/USD pair
+     * @return Price feed address and staleness threshold in seconds
+     */
+    function ethUsdPriceFeedInformation()
+        external
+        view
+        returns (address, uint256);
 
     /**
      * @notice Returns free collateral balance (i.e. that can be borrowed by AMO minters)
@@ -68,6 +83,19 @@ interface IUbiquityPool {
     function getDollarPriceUsd() external view returns (uint256 dollarPriceUsd);
 
     /**
+     * @notice Returns Governance token price in USD (6 decimals precision)
+     * @dev How it works:
+     * 1. Fetch ETH/USD price from chainlink oracle
+     * 2. Fetch Governance/ETH price from Curve's oracle
+     * 3. Calculate Governance token price in USD
+     * @return governancePriceUsd Governance token price in USD
+     */
+    function getGovernancePriceUsd()
+        external
+        view
+        returns (uint256 governancePriceUsd);
+
+    /**
      * @notice Returns user's balance available for redemption
      * @param userAddress User address
      * @param collateralIndex Collateral token index
@@ -77,6 +105,21 @@ interface IUbiquityPool {
         address userAddress,
         uint256 collateralIndex
     ) external view returns (uint256);
+
+    /**
+     * @notice Returns user's Governance tokens balance available for redemption
+     * @param userAddress User address
+     * @return User's Governance tokens balance available for redemption
+     */
+    function getRedeemGovernanceBalance(
+        address userAddress
+    ) external view returns (uint256);
+
+    /**
+     * @notice Returns pool address for Governance/ETH pair
+     * @return Pool address
+     */
+    function governanceEthPoolAddress() external view returns (address);
 
     //====================
     // Public functions
@@ -88,15 +131,26 @@ interface IUbiquityPool {
      * @param dollarAmount Amount of dollars to mint
      * @param dollarOutMin Min amount of dollars to mint (slippage protection)
      * @param maxCollateralIn Max amount of collateral to send (slippage protection)
+     * @param maxGovernanceIn Max amount of Governance tokens to send (slippage protection)
+     * @param isOneToOne Force providing only collateral without Governance tokens
      * @return totalDollarMint Amount of Dollars minted
      * @return collateralNeeded Amount of collateral sent to the pool
+     * @return governanceNeeded Amount of Governance tokens burnt from sender
      */
     function mintDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
         uint256 dollarOutMin,
-        uint256 maxCollateralIn
-    ) external returns (uint256 totalDollarMint, uint256 collateralNeeded);
+        uint256 maxCollateralIn,
+        uint256 maxGovernanceIn,
+        bool isOneToOne
+    )
+        external
+        returns (
+            uint256 totalDollarMint,
+            uint256 collateralNeeded,
+            uint256 governanceNeeded
+        );
 
     /**
      * @notice Burns redeemable Ubiquity Dollars and sends back 1 USD of collateral token for every 1 Ubiquity Dollar burned
@@ -106,14 +160,16 @@ interface IUbiquityPool {
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being withdrawn
      * @param dollarAmount Amount of Ubiquity Dollars being burned
+     * @param governanceOutMin Minimum amount of Governance tokens that'll be withdrawn, used to set acceptable slippage
      * @param collateralOutMin Minimum amount of collateral tokens that'll be withdrawn, used to set acceptable slippage
      * @return collateralOut Amount of collateral tokens ready for redemption
      */
     function redeemDollar(
         uint256 collateralIndex,
         uint256 dollarAmount,
+        uint256 governanceOutMin,
         uint256 collateralOutMin
-    ) external returns (uint256 collateralOut);
+    ) external returns (uint256 collateralOut, uint256 governanceOut);
 
     /**
      * @notice Used to collect collateral tokens after redeeming/burning Ubiquity Dollars
@@ -122,11 +178,18 @@ interface IUbiquityPool {
      * @dev 2. `collectRedemption()`
      * @dev This is done in order to prevent someone using a flash loan of a collateral token to mint, redeem, and collect in a single transaction/block
      * @param collateralIndex Collateral token index being collected
+     * @return governanceAmount Amount of Governance tokens redeemed
      * @return collateralAmount Amount of collateral tokens redeemed
      */
     function collectRedemption(
         uint256 collateralIndex
-    ) external returns (uint256 collateralAmount);
+    ) external returns (uint256 governanceAmount, uint256 collateralAmount);
+
+    /**
+     * @notice Updates collateral token price in USD from ChainLink price feed
+     * @param collateralIndex Collateral token index
+     */
+    function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
 
     //=========================
     // AMO minters functions
@@ -181,10 +244,30 @@ interface IUbiquityPool {
     ) external;
 
     /**
-     * @notice Updates collateral token price in USD from ChainLink price feed
-     * @param collateralIndex Collateral token index
+     * @notice Sets collateral ratio
+     * @dev How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision
+     *
+     * @dev Example (1_000_000 = 100%):
+     * - Mint: user provides 1 collateral token to get 1 Dollar
+     * - Redeem: user gets 1 collateral token for 1 Dollar
+     *
+     * @dev Example (900_000 = 90%):
+     * - Mint: user provides 0.9 collateral token and 0.1 Governance token to get 1 Dollar
+     * - Redeem: user gets 0.9 collateral token and 0.1 Governance token for 1 Dollar
+     *
+     * @param newCollateralRatio New collateral ratio
      */
-    function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
+    function setCollateralRatio(uint256 newCollateralRatio) external;
+
+    /**
+     * @notice Sets chainlink params for ETH/USD price feed
+     * @param newPriceFeedAddress New chainlink price feed address for ETH/USD pair
+     * @param newStalenessThreshold New threshold in seconds when chainlink's ETH/USD price feed answer should be considered stale
+     */
+    function setEthUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) external;
 
     /**
      * @notice Sets mint and redeem fees, 1_000_000 = 100%
@@ -196,6 +279,21 @@ interface IUbiquityPool {
         uint256 collateralIndex,
         uint256 newMintFee,
         uint256 newRedeemFee
+    ) external;
+
+    /**
+     * @notice Sets a new pool address for Governance/ETH pair
+     *
+     * @dev Based on Curve's CurveTwocryptoOptimized contract. Used for fetching Governance token USD price.
+     * How it works:
+     * 1. Fetch Governance/ETH price from CurveTwocryptoOptimized's built-in oracle
+     * 2. Fetch ETH/USD price from chainlink feed
+     * 3. Calculate Governance token price in USD
+     *
+     * @param newGovernanceEthPoolAddress New pool address for Governance/ETH pair
+     */
+    function setGovernanceEthPoolAddress(
+        address newGovernanceEthPoolAddress
     ) external;
 
     /**

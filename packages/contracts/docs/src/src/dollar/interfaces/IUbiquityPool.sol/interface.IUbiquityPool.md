@@ -1,5 +1,5 @@
 # IUbiquityPool
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/interfaces/IUbiquityPool.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/92bc5664236b6ca4617eb576771a708a6060bc2e/src/dollar/interfaces/IUbiquityPool.sol)
 
 Ubiquity pool interface
 
@@ -48,6 +48,21 @@ function collateralInformation(address collateralAddress)
 |`returnData`|`LibUbiquityPool.CollateralInformation`|Collateral info|
 
 
+### collateralRatio
+
+Returns current collateral ratio
+
+
+```solidity
+function collateralRatio() external view returns (uint256);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|Collateral ratio|
+
+
 ### collateralUsdBalance
 
 Returns USD value of all collateral tokens held in the pool, in E18
@@ -61,6 +76,22 @@ function collateralUsdBalance() external view returns (uint256 balanceTally);
 |Name|Type|Description|
 |----|----|-----------|
 |`balanceTally`|`uint256`|USD value of all collateral tokens|
+
+
+### ethUsdPriceFeedInformation
+
+Returns chainlink price feed information for ETH/USD pair
+
+
+```solidity
+function ethUsdPriceFeedInformation() external view returns (address, uint256);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Price feed address and staleness threshold in seconds|
+|`<none>`|`uint256`||
 
 
 ### freeCollateralBalance
@@ -121,6 +152,26 @@ function getDollarPriceUsd() external view returns (uint256 dollarPriceUsd);
 |`dollarPriceUsd`|`uint256`|USD price of Ubiquity Dollar|
 
 
+### getGovernancePriceUsd
+
+Returns Governance token price in USD (6 decimals precision)
+
+*How it works:
+1. Fetch ETH/USD price from chainlink oracle
+2. Fetch Governance/ETH price from Curve's oracle
+3. Calculate Governance token price in USD*
+
+
+```solidity
+function getGovernancePriceUsd() external view returns (uint256 governancePriceUsd);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`governancePriceUsd`|`uint256`|Governance token price in USD|
+
+
 ### getRedeemCollateralBalance
 
 Returns user's balance available for redemption
@@ -143,15 +194,56 @@ function getRedeemCollateralBalance(address userAddress, uint256 collateralIndex
 |`<none>`|`uint256`|User's balance available for redemption|
 
 
+### getRedeemGovernanceBalance
+
+Returns user's Governance tokens balance available for redemption
+
+
+```solidity
+function getRedeemGovernanceBalance(address userAddress) external view returns (uint256);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`userAddress`|`address`|User address|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`uint256`|User's Governance tokens balance available for redemption|
+
+
+### governanceEthPoolAddress
+
+Returns pool address for Governance/ETH pair
+
+
+```solidity
+function governanceEthPoolAddress() external view returns (address);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Pool address|
+
+
 ### mintDollar
 
 Mints Dollars in exchange for collateral tokens
 
 
 ```solidity
-function mintDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 dollarOutMin, uint256 maxCollateralIn)
-    external
-    returns (uint256 totalDollarMint, uint256 collateralNeeded);
+function mintDollar(
+    uint256 collateralIndex,
+    uint256 dollarAmount,
+    uint256 dollarOutMin,
+    uint256 maxCollateralIn,
+    uint256 maxGovernanceIn,
+    bool isOneToOne
+) external returns (uint256 totalDollarMint, uint256 collateralNeeded, uint256 governanceNeeded);
 ```
 **Parameters**
 
@@ -161,6 +253,8 @@ function mintDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 dolla
 |`dollarAmount`|`uint256`|Amount of dollars to mint|
 |`dollarOutMin`|`uint256`|Min amount of dollars to mint (slippage protection)|
 |`maxCollateralIn`|`uint256`|Max amount of collateral to send (slippage protection)|
+|`maxGovernanceIn`|`uint256`|Max amount of Governance tokens to send (slippage protection)|
+|`isOneToOne`|`bool`|Force providing only collateral without Governance tokens|
 
 **Returns**
 
@@ -168,6 +262,7 @@ function mintDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 dolla
 |----|----|-----------|
 |`totalDollarMint`|`uint256`|Amount of Dollars minted|
 |`collateralNeeded`|`uint256`|Amount of collateral sent to the pool|
+|`governanceNeeded`|`uint256`|Amount of Governance tokens burnt from sender|
 
 
 ### redeemDollar
@@ -184,9 +279,9 @@ Burns redeemable Ubiquity Dollars and sends back 1 USD of collateral token for e
 
 
 ```solidity
-function redeemDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 collateralOutMin)
+function redeemDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 governanceOutMin, uint256 collateralOutMin)
     external
-    returns (uint256 collateralOut);
+    returns (uint256 collateralOut, uint256 governanceOut);
 ```
 **Parameters**
 
@@ -194,6 +289,7 @@ function redeemDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 col
 |----|----|-----------|
 |`collateralIndex`|`uint256`|Collateral token index being withdrawn|
 |`dollarAmount`|`uint256`|Amount of Ubiquity Dollars being burned|
+|`governanceOutMin`|`uint256`|Minimum amount of Governance tokens that'll be withdrawn, used to set acceptable slippage|
 |`collateralOutMin`|`uint256`|Minimum amount of collateral tokens that'll be withdrawn, used to set acceptable slippage|
 
 **Returns**
@@ -201,6 +297,7 @@ function redeemDollar(uint256 collateralIndex, uint256 dollarAmount, uint256 col
 |Name|Type|Description|
 |----|----|-----------|
 |`collateralOut`|`uint256`|Amount of collateral tokens ready for redemption|
+|`governanceOut`|`uint256`||
 
 
 ### collectRedemption
@@ -217,7 +314,9 @@ Used to collect collateral tokens after redeeming/burning Ubiquity Dollars
 
 
 ```solidity
-function collectRedemption(uint256 collateralIndex) external returns (uint256 collateralAmount);
+function collectRedemption(uint256 collateralIndex)
+    external
+    returns (uint256 governanceAmount, uint256 collateralAmount);
 ```
 **Parameters**
 
@@ -229,7 +328,23 @@ function collectRedemption(uint256 collateralIndex) external returns (uint256 co
 
 |Name|Type|Description|
 |----|----|-----------|
+|`governanceAmount`|`uint256`|Amount of Governance tokens redeemed|
 |`collateralAmount`|`uint256`|Amount of collateral tokens redeemed|
+
+
+### updateChainLinkCollateralPrice
+
+Updates collateral token price in USD from ChainLink price feed
+
+
+```solidity
+function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`collateralIndex`|`uint256`|Collateral token index|
 
 
 ### amoMinterBorrow
@@ -319,19 +434,45 @@ function setCollateralChainLinkPriceFeed(
 |`stalenessThreshold`|`uint256`|Threshold in seconds when chainlink answer should be considered stale|
 
 
-### updateChainLinkCollateralPrice
+### setCollateralRatio
 
-Updates collateral token price in USD from ChainLink price feed
+Sets collateral ratio
+
+*How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision*
+
+*Example (1_000_000 = 100%):
+- Mint: user provides 1 collateral token to get 1 Dollar
+- Redeem: user gets 1 collateral token for 1 Dollar*
+
+*Example (900_000 = 90%):
+- Mint: user provides 0.9 collateral token and 0.1 Governance token to get 1 Dollar
+- Redeem: user gets 0.9 collateral token and 0.1 Governance token for 1 Dollar*
 
 
 ```solidity
-function updateChainLinkCollateralPrice(uint256 collateralIndex) external;
+function setCollateralRatio(uint256 newCollateralRatio) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`collateralIndex`|`uint256`|Collateral token index|
+|`newCollateralRatio`|`uint256`|New collateral ratio|
+
+
+### setEthUsdChainLinkPriceFeed
+
+Sets chainlink params for ETH/USD price feed
+
+
+```solidity
+function setEthUsdChainLinkPriceFeed(address newPriceFeedAddress, uint256 newStalenessThreshold) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newPriceFeedAddress`|`address`|New chainlink price feed address for ETH/USD pair|
+|`newStalenessThreshold`|`uint256`|New threshold in seconds when chainlink's ETH/USD price feed answer should be considered stale|
 
 
 ### setFees
@@ -349,6 +490,27 @@ function setFees(uint256 collateralIndex, uint256 newMintFee, uint256 newRedeemF
 |`collateralIndex`|`uint256`|Collateral token index|
 |`newMintFee`|`uint256`|New mint fee|
 |`newRedeemFee`|`uint256`|New redeem fee|
+
+
+### setGovernanceEthPoolAddress
+
+Sets a new pool address for Governance/ETH pair
+
+*Based on Curve's CurveTwocryptoOptimized contract. Used for fetching Governance token USD price.
+How it works:
+1. Fetch Governance/ETH price from CurveTwocryptoOptimized's built-in oracle
+2. Fetch ETH/USD price from chainlink feed
+3. Calculate Governance token price in USD*
+
+
+```solidity
+function setGovernanceEthPoolAddress(address newGovernanceEthPoolAddress) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newGovernanceEthPoolAddress`|`address`|New pool address for Governance/ETH pair|
 
 
 ### setPoolCeiling

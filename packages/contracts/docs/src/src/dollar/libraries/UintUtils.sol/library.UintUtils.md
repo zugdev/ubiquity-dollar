@@ -1,5 +1,5 @@
 # UintUtils
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/b59512059f70e70f7d719ba196d6f1f9322569a0/src/dollar/libraries/UintUtils.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/92bc5664236b6ca4617eb576771a708a6060bc2e/src/dollar/libraries/UintUtils.sol)
 
 *Derived from https://github.com/OpenZeppelin/openzeppelin-contracts/ (MIT license)*
 
