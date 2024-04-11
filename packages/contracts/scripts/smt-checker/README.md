@@ -12,7 +12,7 @@ Ensure that your system has Z3 installed with a version number greater than or e
 Before proceeding, ensure that you have `g++` and `python3` installed on your system. To download and install Z3, enter the following commands in your terminal:
 
 ### Run script:
-```
+```shh
 sh ./update-dependencies.sh
 ```
 
@@ -40,7 +40,7 @@ https://github.com/molecula451/ubiquity-dollar/assets/41552663/cdcf3982-94a4-4cf
 
 Ensure that your repository is up-to-date with the latest npm/yarn packages, then run the following command:
 
-```
+```sh
 sh ./run-smt-setup.sh
 ```
 
@@ -57,8 +57,14 @@ This will prompt you to select a contract. Once selected, check that the contrac
 
 On Ubuntu you might get:
 
+```sh
 Compiler run failed:
 Error: Unknown exception during compilation: Dynamic exception type: std::runtime_error
 std::exception::what: locale::facet::_S_create_c_locale name not valid
 
-Fix: do an 'export LC_ALL=C; unset LANGUAGE'
+```
+#### Fix
+
+```sh
+export LC_ALL=C; unset LANGUAGE
+```
