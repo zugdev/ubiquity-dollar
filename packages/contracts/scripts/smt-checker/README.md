@@ -52,3 +52,13 @@ https://github.com/molecula451/ubiquity-dollar/assets/41552663/a4cad18e-0686-463
 This will prompt you to select a contract. Once selected, check that the contract was updated in Foundry, then build it using forge build. Wait for the SMT-Checker results to appear after compiling.
 
 ![checker](https://github.com/molecula451/ubiquity-dollar/assets/41552663/a8e6a3de-2ccf-40bd-8d19-c1b4203c466f)
+
+## Debug
+
+On Ubuntu you might get:
+
+Compiler run failed:
+Error: Unknown exception during compilation: Dynamic exception type: std::runtime_error
+std::exception::what: locale::facet::_S_create_c_locale name not valid
+
+Fix: do an 'export LC_ALL=C; unset LANGUAGE'
