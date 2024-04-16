@@ -166,9 +166,9 @@ contract UbiquityDollarTokenTest is LocalTestHelper {
         );
         bool hasUpgraded = abi.decode(data, (bool));
 
-        assertEq(hasUpgraded, true, "upgrade succeed");
-        assertEq(success, true, "upgrade succeed");
-        require(success == true, "upgrade succeed");
+        assertEq(hasUpgraded, true, "should have upgraded");
+        assertEq(success, true, "should have upgraded");
+        require(success == true, "should have upgraded");
     }
 }
 
