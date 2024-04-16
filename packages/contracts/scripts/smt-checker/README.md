@@ -13,7 +13,7 @@ Before proceeding, ensure that you have `g++` and `python3` installed on your sy
 
 ### Run script:
 ```sh
-sh ./update-dependencies.sh
+./update-deps-ubuntu
 ```
 
 Once installed, you can verify that Z3 is correctly installed by checking the version number.
@@ -41,7 +41,7 @@ https://github.com/molecula451/ubiquity-dollar/assets/41552663/cdcf3982-94a4-4cf
 Ensure that your repository is up-to-date with the latest npm/yarn packages, then run the following command:
 
 ```sh
-sh ./run-smt-setup.sh
+./run-smt-setup
 ```
 
 
