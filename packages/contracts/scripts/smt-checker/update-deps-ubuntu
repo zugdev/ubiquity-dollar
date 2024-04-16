@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # Install dependencies
-apt-get update && sudo apt-get install -y g++ && \
-apt-get install -y wget
-apt-get install -y z3 && \
-apt-get install -y libz3-dev && \
+sudo apt-get update && sudo apt-get install -y g++ && \
+sudo apt-get install -y wget
+sudo apt-get install -y z3 && \
+sudo apt-get install -y libz3-dev && \
 
 # Download and install Z3
-wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.11.0.tar.gz && \
-tar -zxvf z3-4.11.0.tar.gz && \
+sudo wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.11.0.tar.gz && \
+sudo tar -zxvf z3-4.11.0.tar.gz && \
 cd z3-z3-4.11.0 && \
-python3 scripts/mk_make.py && \
+sudo python3 scripts/mk_make.py && \
 cd build && \
-make -j$(nproc) && \
-make install && \
-cp libz3.so libz3.so.4.11 && \
-mv libz3.so.4.11 /usr/lib/x86_64-linux-gnu && \
+sudo make -j$(nproc) && \
+sudo make install && \
+sudo cp libz3.so libz3.so.4.11 && \
+sudo mv libz3.so.4.11 /usr/lib/x86_64-linux-gnu && \
 echo "Successfully copied Z3 to the system" && \
 
 # Print success message
