@@ -12,7 +12,7 @@ Ensure that your system has Z3 installed with a version number greater than or e
 Before proceeding, ensure that you have `g++` and `python3` installed on your system. To download and install Z3, enter the following commands in your terminal:
 
 ### Run script:
-```shh
+```sh
 sh ./update-dependencies.sh
 ```
 
