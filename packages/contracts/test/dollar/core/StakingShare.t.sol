@@ -445,8 +445,8 @@ contract StakingShareTest is DepositStakingShare {
     }
 
     function testUUPS_InitializedVersion() external {
-        uint expectedVersion = 1;
-        uint baseExpectedVersion = 255;
+        uint256 expectedVersion = 1;
+        uint256 baseExpectedVersion = 255;
 
         BondingShare bondingShare = new BondingShare();
         BondingShareUpgraded bondingShareUpgraded = new BondingShareUpgraded();

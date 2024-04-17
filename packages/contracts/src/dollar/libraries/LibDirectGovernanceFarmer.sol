@@ -105,12 +105,12 @@ library LibDirectGovernanceFarmer {
      * @notice Deposits a single token to staking
      * @notice Stable coin (DAI / USDC / USDT / Ubiquity Dollar) => Dollar-3CRV LP => Ubiquity Staking
      * @notice How it works:
-     * 1. User deposit stablecoins (DAI / USDC / USDT / Dollar)
-     * 2. Deposited stablecoins are added to Dollar-3CRV Curve MetaPool
+     * 1. User deposit supported stablecoins
+     * 2. Deposited stablecoins are added to Curve MetaPool
      * 3. User gets Dollar-3CRV LP tokens
      * 4. Dollar-3CRV LP tokens are transferred to the staking contract
      * 5. User gets a staking share id
-     * @param token Token deposited : DAI, USDC, USDT or Ubiquity Dollar
+     * @param token Token deposited : Stablecoin
      * @param amount Amount of tokens to deposit (For max: `uint256(-1)`)
      * @param durationWeeks Duration in weeks tokens will be locked (1-208)
      * @return stakingShareId Staking share id

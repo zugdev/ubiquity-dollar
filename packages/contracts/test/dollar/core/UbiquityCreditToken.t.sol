@@ -83,8 +83,8 @@ contract UbiquityCreditTokenTest is LocalTestHelper {
     }
 
     function testUUPS_InitializedVersion() external {
-        uint expectedVersion = 1;
-        uint baseExpectedVersion = 255;
+        uint256 expectedVersion = 1;
+        uint256 baseExpectedVersion = 255;
 
         UbiquityCreditTokenUpgraded newImpl = new UbiquityCreditTokenUpgraded();
         UbiquityCreditTokenUpgraded newImplT = new UbiquityCreditTokenUpgraded();

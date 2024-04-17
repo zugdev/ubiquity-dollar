@@ -12,8 +12,8 @@ Ensure that your system has Z3 installed with a version number greater than or e
 Before proceeding, ensure that you have `g++` and `python3` installed on your system. To download and install Z3, enter the following commands in your terminal:
 
 ### Run script:
-```
-sh ./update-dependencies.sh
+```sh
+./update-deps-ubuntu
 ```
 
 Once installed, you can verify that Z3 is correctly installed by checking the version number.
@@ -40,8 +40,8 @@ https://github.com/molecula451/ubiquity-dollar/assets/41552663/cdcf3982-94a4-4cf
 
 Ensure that your repository is up-to-date with the latest npm/yarn packages, then run the following command:
 
-```
-sh ./run-smt-setup.sh
+```sh
+./run-smt-setup
 ```
 
 
@@ -52,3 +52,19 @@ https://github.com/molecula451/ubiquity-dollar/assets/41552663/a4cad18e-0686-463
 This will prompt you to select a contract. Once selected, check that the contract was updated in Foundry, then build it using forge build. Wait for the SMT-Checker results to appear after compiling.
 
 ![checker](https://github.com/molecula451/ubiquity-dollar/assets/41552663/a8e6a3de-2ccf-40bd-8d19-c1b4203c466f)
+
+## Debug
+
+On Ubuntu you might get:
+
+```sh
+Compiler run failed:
+Error: Unknown exception during compilation: Dynamic exception type: std::runtime_error
+std::exception::what: locale::facet::_S_create_c_locale name not valid
+
+```
+#### Fix
+
+```sh
+export LC_ALL=C; unset LANGUAGE
+```
