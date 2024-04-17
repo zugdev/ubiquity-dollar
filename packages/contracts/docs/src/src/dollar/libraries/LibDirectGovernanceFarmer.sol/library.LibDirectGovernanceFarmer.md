@@ -1,5 +1,5 @@
 # LibDirectGovernanceFarmer
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/2eddcfb55b36b43d0000788d070925b81d328b5a/src/dollar/libraries/LibDirectGovernanceFarmer.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/3afad00be7859c9d95a7c7cf9fbaa311b4110995/src/dollar/libraries/LibDirectGovernanceFarmer.sol)
 
 
 ## State Variables
@@ -48,8 +48,8 @@ Deposits a single token to staking
 Stable coin (DAI / USDC / USDT / Ubiquity Dollar) => Dollar-3CRV LP => Ubiquity Staking
 
 How it works:
-1. User deposit stablecoins (DAI / USDC / USDT / Dollar)
-2. Deposited stablecoins are added to Dollar-3CRV Curve MetaPool
+1. User deposit supported stablecoins
+2. Deposited stablecoins are added to Curve MetaPool
 3. User gets Dollar-3CRV LP tokens
 4. Dollar-3CRV LP tokens are transferred to the staking contract
 5. User gets a staking share id
@@ -64,7 +64,7 @@ function depositSingle(address token, uint256 amount, uint256 durationWeeks)
 
 |Name|Type|Description|
 |----|----|-----------|
-|`token`|`address`|Token deposited : DAI, USDC, USDT or Ubiquity Dollar|
+|`token`|`address`|Token deposited : Stablecoin|
 |`amount`|`uint256`|Amount of tokens to deposit (For max: `uint256(-1)`)|
 |`durationWeeks`|`uint256`|Duration in weeks tokens will be locked (1-208)|
 
