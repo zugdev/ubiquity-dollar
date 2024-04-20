@@ -1,5 +1,5 @@
 # LibUbiquityPool
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/3afad00be7859c9d95a7c7cf9fbaa311b4110995/src/dollar/libraries/LibUbiquityPool.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/libraries/LibUbiquityPool.sol)
 
 Ubiquity pool library
 
@@ -508,7 +508,9 @@ function setCollateralChainLinkPriceFeed(
 
 Sets collateral ratio
 
-*How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision*
+*How much collateral/governance tokens user should provide/get to mint/redeem Dollar tokens, 1e6 precision.*
+
+*Collateral ratio is capped to 100%.*
 
 *Example (1_000_000 = 100%):
 - Mint: user provides 1 collateral token to get 1 Dollar
