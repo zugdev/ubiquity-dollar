@@ -6,7 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {ICurveStableSwapMetaNG} from "../interfaces/ICurveStableSwapMetaNG.sol";
+import {ICurveStableSwapNG} from "../interfaces/ICurveStableSwapNG.sol";
 import {ICurveTwocryptoOptimized} from "../interfaces/ICurveTwocryptoOptimized.sol";
 import {IDollarAmoMinter} from "../interfaces/IDollarAmoMinter.sol";
 import {IERC20Ubiquity} from "../interfaces/IERC20Ubiquity.sol";
@@ -103,6 +103,13 @@ library LibUbiquityPool {
         uint256 ethUsdPriceFeedStalenessThreshold;
         // Curve's CurveTwocryptoOptimized contract for Governance/ETH pair
         address governanceEthPoolAddress;
+        //================================
+        // Dollar token pricing related
+        //================================
+        // chainlink price feed for stable/USD pair
+        address stableUsdPriceFeedAddress;
+        // threshold in seconds when chainlink's stable/USD price feed answer should be considered stale
+        uint256 stableUsdPriceFeedStalenessThreshold;
     }
 
     /// @notice Struct used for detailed collateral information
@@ -182,6 +189,11 @@ library LibUbiquityPool {
     );
     /// @notice Emitted when a new redemption delay in blocks is set
     event RedemptionDelayBlocksSet(uint256 redemptionDelayBlocks);
+    /// @notice Emitted on setting chainlink's price feed for stable/USD pair
+    event StableUsdPriceFeedSet(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    );
 
     //=====================
     // Modifiers
@@ -362,7 +374,11 @@ library LibUbiquityPool {
     }
 
     /**
-     * @notice Returns Ubiquity Dollar token USD price (1e6 precision) from Curve Metapool (Ubiquity Dollar, Curve Tri-Pool LP)
+     * @notice Returns Ubiquity Dollar token USD price (1e6 precision) from Curve plain pool (Stable coin, Ubiquity Dollar)
+     * How it works:
+     * 1. Fetch Stable/USD quote from chainlink
+     * 2. Fetch Dollar/Stable quote from Curve's plain pool
+     * 3. Calculate Dollar token price in USD
      * @return dollarPriceUsd USD price of Ubiquity Dollar
      */
     function getDollarPriceUsd()
@@ -370,15 +386,39 @@ library LibUbiquityPool {
         view
         returns (uint256 dollarPriceUsd)
     {
-        // load storage shared across all libraries
         AppStorage storage store = LibAppStorage.appStorage();
-        // get Dollar price from Curve Metapool (18 decimals)
-        uint256 dollarPriceUsdD18 = ICurveStableSwapMetaNG(
-            store.stableSwapMetaPoolAddress
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        // fetch Stable/USD quote from chainlink (8 decimals)
+        AggregatorV3Interface stableUsdPriceFeed = AggregatorV3Interface(
+            poolStorage.stableUsdPriceFeedAddress
+        );
+        (
+            ,
+            int256 stableUsdAnswer,
+            ,
+            uint256 stableUsdUpdatedAt,
+
+        ) = stableUsdPriceFeed.latestRoundData();
+        uint256 stableUsdPriceFeedDecimals = stableUsdPriceFeed.decimals();
+        // validate Stable/USD chainlink response
+        require(stableUsdAnswer > 0, "Invalid Stable/USD price");
+        require(
+            block.timestamp - stableUsdUpdatedAt <
+                poolStorage.stableUsdPriceFeedStalenessThreshold,
+            "Stale Stable/USD data"
+        );
+
+        // fetch Dollar/Stable quote from Curve's plain pool (18 decimals)
+        uint256 dollarPriceUsdD18 = ICurveStableSwapNG(
+            store.stableSwapPlainPoolAddress
         ).price_oracle(0);
+
         // convert to 6 decimals
         dollarPriceUsd = dollarPriceUsdD18
             .mul(UBIQUITY_POOL_PRICE_PRECISION)
+            .mul(uint256(stableUsdAnswer))
+            .div(10 ** stableUsdPriceFeedDecimals)
             .div(1e18);
     }
 
@@ -465,6 +505,23 @@ library LibUbiquityPool {
     function governanceEthPoolAddress() internal view returns (address) {
         UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
         return poolStorage.governanceEthPoolAddress;
+    }
+
+    /**
+     * @notice Returns chainlink price feed information for stable/USD pair
+     * @dev Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool
+     * @return Price feed address and staleness threshold in seconds
+     */
+    function stableUsdPriceFeedInformation()
+        internal
+        view
+        returns (address, uint256)
+    {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+        return (
+            poolStorage.stableUsdPriceFeedAddress,
+            poolStorage.stableUsdPriceFeedStalenessThreshold
+        );
     }
 
     //====================
@@ -1122,6 +1179,25 @@ library LibUbiquityPool {
         poolStorage.redemptionDelayBlocks = newRedemptionDelayBlocks;
 
         emit RedemptionDelayBlocksSet(newRedemptionDelayBlocks);
+    }
+
+    /**
+     * @notice Sets chainlink params for stable/USD price feed
+     * @dev Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool
+     * @param newPriceFeedAddress New chainlink price feed address for stable/USD pair
+     * @param newStalenessThreshold New threshold in seconds when chainlink's stable/USD price feed answer should be considered stale
+     */
+    function setStableUsdChainLinkPriceFeed(
+        address newPriceFeedAddress,
+        uint256 newStalenessThreshold
+    ) internal {
+        UbiquityPoolStorage storage poolStorage = ubiquityPoolStorage();
+
+        poolStorage.stableUsdPriceFeedAddress = newPriceFeedAddress;
+        poolStorage
+            .stableUsdPriceFeedStalenessThreshold = newStalenessThreshold;
+
+        emit StableUsdPriceFeedSet(newPriceFeedAddress, newStalenessThreshold);
     }
 
     /**
