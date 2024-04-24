@@ -1,5 +1,5 @@
 # AppStorage
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/libraries/LibAppStorage.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/libraries/LibAppStorage.sol)
 
 Shared struct used as a storage in the `LibAppStorage` library
 
@@ -14,6 +14,7 @@ struct AppStorage {
     address stakingShareAddress;
     address stakingContractAddress;
     address stableSwapMetaPoolAddress;
+    address stableSwapPlainPoolAddress;
     address curve3PoolTokenAddress;
     address treasuryAddress;
     address governanceTokenAddress;

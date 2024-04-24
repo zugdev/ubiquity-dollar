@@ -4,6 +4,7 @@
 - [MockChainLinkFeed](MockChainLinkFeed.sol/contract.MockChainLinkFeed.md)
 - [MockCurveFactory](MockCurveFactory.sol/contract.MockCurveFactory.md)
 - [MockCurveStableSwapMetaNG](MockCurveStableSwapMetaNG.sol/contract.MockCurveStableSwapMetaNG.md)
+- [MockCurveStableSwapNG](MockCurveStableSwapNG.sol/contract.MockCurveStableSwapNG.md)
 - [MockCurveTwocryptoOptimized](MockCurveTwocryptoOptimized.sol/contract.MockCurveTwocryptoOptimized.md)
 - [MockERC20](MockERC20.sol/contract.MockERC20.md)
 - [IMockFacet](MockFacet.sol/interface.IMockFacet.md)

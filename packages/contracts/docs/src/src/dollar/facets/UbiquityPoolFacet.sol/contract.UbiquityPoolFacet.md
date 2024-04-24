@@ -1,5 +1,5 @@
 # UbiquityPoolFacet
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/facets/UbiquityPoolFacet.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/facets/UbiquityPoolFacet.sol)
 
 **Inherits:**
 [IUbiquityPool](/src/dollar/interfaces/IUbiquityPool.sol/interface.IUbiquityPool.md), [Modifiers](/src/dollar/libraries/LibAppStorage.sol/contract.Modifiers.md)
@@ -231,6 +231,24 @@ function governanceEthPoolAddress() external view returns (address);
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`address`|Pool address|
+
+
+### stableUsdPriceFeedInformation
+
+Returns chainlink price feed information for stable/USD pair
+
+*Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool*
+
+
+```solidity
+function stableUsdPriceFeedInformation() external view returns (address, uint256);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Price feed address and staleness threshold in seconds|
+|`<none>`|`uint256`||
 
 
 ### mintDollar
@@ -546,6 +564,26 @@ function setRedemptionDelayBlocks(uint256 newRedemptionDelayBlocks) external onl
 |Name|Type|Description|
 |----|----|-----------|
 |`newRedemptionDelayBlocks`|`uint256`|Redemption delay in blocks|
+
+
+### setStableUsdChainLinkPriceFeed
+
+Sets chainlink params for stable/USD price feed
+
+*Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool*
+
+
+```solidity
+function setStableUsdChainLinkPriceFeed(address newPriceFeedAddress, uint256 newStalenessThreshold)
+    external
+    onlyAdmin;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newPriceFeedAddress`|`address`|New chainlink price feed address for stable/USD pair|
+|`newStalenessThreshold`|`uint256`|New threshold in seconds when chainlink's stable/USD price feed answer should be considered stale|
 
 
 ### toggleCollateral

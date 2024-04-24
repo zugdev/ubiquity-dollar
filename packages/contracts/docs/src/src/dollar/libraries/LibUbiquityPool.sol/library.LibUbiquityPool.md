@@ -1,5 +1,5 @@
 # LibUbiquityPool
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/libraries/LibUbiquityPool.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/libraries/LibUbiquityPool.sol)
 
 Ubiquity pool library
 
@@ -204,7 +204,11 @@ function getDollarInCollateral(uint256 collateralIndex, uint256 dollarAmount) in
 
 ### getDollarPriceUsd
 
-Returns Ubiquity Dollar token USD price (1e6 precision) from Curve Metapool (Ubiquity Dollar, Curve Tri-Pool LP)
+Returns Ubiquity Dollar token USD price (1e6 precision) from Curve plain pool (Stable coin, Ubiquity Dollar)
+How it works:
+1. Fetch Stable/USD quote from chainlink
+2. Fetch Dollar/Stable quote from Curve's plain pool
+3. Calculate Dollar token price in USD
 
 
 ```solidity
@@ -293,6 +297,24 @@ function governanceEthPoolAddress() internal view returns (address);
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`address`|Pool address|
+
+
+### stableUsdPriceFeedInformation
+
+Returns chainlink price feed information for stable/USD pair
+
+*Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool*
+
+
+```solidity
+function stableUsdPriceFeedInformation() internal view returns (address, uint256);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Price feed address and staleness threshold in seconds|
+|`<none>`|`uint256`||
 
 
 ### mintDollar
@@ -640,6 +662,24 @@ function setRedemptionDelayBlocks(uint256 newRedemptionDelayBlocks) internal;
 |`newRedemptionDelayBlocks`|`uint256`|Redemption delay in blocks|
 
 
+### setStableUsdChainLinkPriceFeed
+
+Sets chainlink params for stable/USD price feed
+
+*Here stable coin refers to the 1st coin in the Curve's stable/Dollar plain pool*
+
+
+```solidity
+function setStableUsdChainLinkPriceFeed(address newPriceFeedAddress, uint256 newStalenessThreshold) internal;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newPriceFeedAddress`|`address`|New chainlink price feed address for stable/USD pair|
+|`newStalenessThreshold`|`uint256`|New threshold in seconds when chainlink's stable/USD price feed answer should be considered stale|
+
+
 ### toggleCollateral
 
 Toggles (i.e. enables/disables) a particular collateral token
@@ -776,6 +816,14 @@ Emitted when a new redemption delay in blocks is set
 event RedemptionDelayBlocksSet(uint256 redemptionDelayBlocks);
 ```
 
+### StableUsdPriceFeedSet
+Emitted on setting chainlink's price feed for stable/USD pair
+
+
+```solidity
+event StableUsdPriceFeedSet(address newPriceFeedAddress, uint256 newStalenessThreshold);
+```
+
 ## Structs
 ### UbiquityPoolStorage
 Struct used as a storage for this library
@@ -810,6 +858,8 @@ struct UbiquityPoolStorage {
     address ethUsdPriceFeedAddress;
     uint256 ethUsdPriceFeedStalenessThreshold;
     address governanceEthPoolAddress;
+    address stableUsdPriceFeedAddress;
+    uint256 stableUsdPriceFeedStalenessThreshold;
 }
 ```
 

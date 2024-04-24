@@ -1,5 +1,5 @@
 # ERC1155Ubiquity
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/core/ERC1155Ubiquity.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/core/ERC1155Ubiquity.sol)
 
 **Inherits:**
 Initializable, ERC1155BurnableUpgradeable, ERC1155PausableUpgradeable, UUPSUpgradeable

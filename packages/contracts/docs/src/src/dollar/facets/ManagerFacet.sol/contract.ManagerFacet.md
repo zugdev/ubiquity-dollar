@@ -1,5 +1,5 @@
 # ManagerFacet
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/562529d3970008a3b47fdae4073c66a60be478ff/src/dollar/facets/ManagerFacet.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/facets/ManagerFacet.sol)
 
 **Inherits:**
 [Modifiers](/src/dollar/libraries/LibAppStorage.sol/contract.Modifiers.md)
@@ -202,6 +202,23 @@ function setStableSwapMetaPoolAddress(address _stableSwapMetaPoolAddress) extern
 |Name|Type|Description|
 |----|----|-----------|
 |`_stableSwapMetaPoolAddress`|`address`|Curve Dollar-3CRV MetaPool address|
+
+
+### setStableSwapPlainPoolAddress
+
+Sets Curve's Dollar-Stablecoin plain pool address
+
+*`_stableSwapPlainPoolAddress` is used to fetch Dollar price in USD*
+
+
+```solidity
+function setStableSwapPlainPoolAddress(address _stableSwapPlainPoolAddress) external onlyAdmin;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_stableSwapPlainPoolAddress`|`address`|Curve's Dollar-Stablecoin plain pool address|
 
 
 ### setStakingContractAddress
@@ -544,6 +561,21 @@ function stableSwapMetaPoolAddress() external view returns (address);
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`address`|Curve MetaPool address|
+
+
+### stableSwapPlainPoolAddress
+
+Returns Curve's plain pool address for Dollar-Stablecoin pair
+
+
+```solidity
+function stableSwapPlainPoolAddress() external view returns (address);
+```
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Curve's plain pool address for Dollar-Stablecoin pair|
 
 
 ### stakingContractAddress
