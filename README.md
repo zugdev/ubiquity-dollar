@@ -92,6 +92,13 @@ COLLATERAL_TOKEN_ADDRESS="0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"
 
 # Collateral token price feed address from chainlink.
 # By default set to LUSD/USD price feed deployed on ethereum mainnet.
+# This price feed is used in 2 cases:
+# 1) To calculate collateral price in USD
+# 2) To calculate Dollar price in USD
+# Since collateral token (LUSD) is the same one used in Curve's plain pool (LUSD-Dollar)
+# we share the same price feed in:
+# 1) `LibUbiquityPool.setCollateralChainLinkPriceFeed()` (to calculate collateral price in USD)
+# 2) `LibUbiquityPool.setStableUsdChainLinkPriceFeed()` (to calculate Dollar price in USD)
 # - mainnet: uses already deployed LUSD/USD chainlink price feed
 # - testnet/anvil: deploys LUSD/USD chainlink price feed from scratch
 COLLATERAL_TOKEN_CHAINLINK_PRICE_FEED_ADDRESS="0x3D7aE7E594f2f2091Ad8798313450130d0Aba3a0"
