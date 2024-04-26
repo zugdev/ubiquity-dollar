@@ -1,5 +1,5 @@
 # CreditNft
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/core/CreditNft.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/core/CreditNft.sol)
 
 **Inherits:**
 [ERC1155Ubiquity](/src/dollar/core/ERC1155Ubiquity.sol/abstract.ERC1155Ubiquity.md), [ICreditNft](/src/dollar/interfaces/ICreditNft.sol/interface.ICreditNft.md)

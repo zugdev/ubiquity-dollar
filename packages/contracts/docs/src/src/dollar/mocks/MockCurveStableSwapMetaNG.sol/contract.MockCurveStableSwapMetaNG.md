@@ -1,5 +1,5 @@
 # MockCurveStableSwapMetaNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/mocks/MockCurveStableSwapMetaNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/mocks/MockCurveStableSwapMetaNG.sol)
 
 **Inherits:**
 [ICurveStableSwapMetaNG](/src/dollar/interfaces/ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md), [MockERC20](/src/dollar/mocks/MockERC20.sol/contract.MockERC20.md)
@@ -47,7 +47,7 @@ constructor(address _token0, address _token1) MockERC20("Mock", "MCK", 18);
 
 ```solidity
 function add_liquidity(uint256[2] memory _amounts, uint256 _min_mint_amount, address _receiver)
-    external
+    public
     returns (uint256 result);
 ```
 

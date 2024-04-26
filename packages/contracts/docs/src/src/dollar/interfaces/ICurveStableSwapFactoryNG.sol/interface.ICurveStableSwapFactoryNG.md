@@ -1,5 +1,5 @@
 # ICurveStableSwapFactoryNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/interfaces/ICurveStableSwapFactoryNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/interfaces/ICurveStableSwapFactoryNG.sol)
 
 Factory allows the permissionless deployment of up to
 eight-coin plain pools (ex: DAI-USDT-USDC) and metapools (ex: USDT-3CRV).
@@ -37,7 +37,7 @@ function deploy_metapool(
 |`_symbol`|`string`|Symbol for the new metapool’s LP token - will be concatenated with the base pool symbol, ex: `Dollar3CRV`|
 |`_coin`|`address`|Address of the coin being used in the metapool, ex: use Dollar token address|
 |`_A`|`uint256`|Amplification coefficient. If set to 0 then bonding curve acts like Uniswap. Any >0 value makes the bonding curve to swap at 1:1 constant price, the more `_A` the longer the constant price period. Curve recommends set it to 100 for crypto collateralizard stablecoins. This parameter can be updated later.|
-|`_fee`|`uint256`|Trade fee, given as an integer with 1e10 precision, ex: 40000000 = 0.04% fee|
+|`_fee`|`uint256`|Trade fee, given as an integer with 1e10 precision, ex: 4000000 = 0.04% fee|
 |`_offpeg_fee_multiplier`|`uint256`|Off-peg multiplier. Curve recommends set it to `20000000000`. This parameter can be updated later. More info: https://docs.curve.fi/stableswap-exchange/stableswap-ng/pools/overview/#dynamic-fees|
 |`_ma_exp_time`|`uint256`|MA time; set as time_in_seconds / ln(2), ex: 866 = 600 seconds, 2597 = 1800 seconds. This parameter can be updated later.|
 |`_implementation_idx`|`uint256`|Index of the metapool implementation to use. Can be retrieved via `ICurveStableSwapFactoryNG.metapool_implementations()`. There is only 1 metapool implementation right now so use index `0`.|
@@ -50,5 +50,48 @@ function deploy_metapool(
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`address`|Deployed metapool address|
+
+
+### deploy_plain_pool
+
+Deploys a new plain pool
+
+
+```solidity
+function deploy_plain_pool(
+    string memory _name,
+    string memory _symbol,
+    address[] memory _coins,
+    uint256 _A,
+    uint256 _fee,
+    uint256 _offpeg_fee_multiplier,
+    uint256 _ma_exp_time,
+    uint256 _implementation_idx,
+    uint8[] memory _asset_types,
+    bytes4[] memory _method_ids,
+    address[] memory _oracles
+) external returns (address);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_name`|`string`|Name of the new plain pool, ex: "LUSD/Dollar"|
+|`_symbol`|`string`|Symbol for the new pool's LP token, ex: "LUSDDollar"|
+|`_coins`|`address[]`|Array of addresses of the coins being used in the pool|
+|`_A`|`uint256`|Amplification coefficient. If set to 0 then bonding curve acts like Uniswap. Any >0 value makes the bonding curve to swap at 1:1 constant price, the more `_A` the longer the constant price period. Curve recommends set it to 100 for crypto collateralizard stablecoins. This parameter can be updated later.|
+|`_fee`|`uint256`|Trade fee, given as an integer with 1e10 precision, ex: 4000000 = 0.04% fee|
+|`_offpeg_fee_multiplier`|`uint256`|Off-peg multiplier. Curve recommends set it to `20000000000`. This parameter can be updated later. More info: https://docs.curve.fi/stableswap-exchange/stableswap-ng/pools/overview/#dynamic-fees|
+|`_ma_exp_time`|`uint256`|MA time; set as time_in_seconds / ln(2), ex: 866 = 600 seconds, 2597 = 1800 seconds. This parameter can be updated later.|
+|`_implementation_idx`|`uint256`|Index of the plain pool implementation to use. Can be retrieved via `ICurveStableSwapFactoryNG.pool_implementations()`. There is only 1 plain pool implementation right now so use index `0`.|
+|`_asset_types`|`uint8[]`|Asset types of the pool tokens as an integer. Available asset type indexes: - 0: Standard ERC20 token with no additional features - 1: Oracle - token with rate oracle (e.g. wstETH) - 2: Rebasing - token with rebase (e.g. stETH) - 3: ERC4626 - token with convertToAssets method (e.g. sDAI) Both Dollar and LUSD are standard ERC20 tokens so we should use asset types with index `0`.|
+|`_method_ids`|`bytes4[]`|Array of first four bytes of the Keccak-256 hash of the function signatures of the oracle addresses that give rate oracles. This is applied only to asset type `1` (Oracle). For Dollar token deployment set empty.|
+|`_oracles`|`address[]`|Array of rate oracle addresses. This is applied only to asset type `1` (Oracle). For Dollar token deployment set empty address.|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|Deployed plain pool address|
 
 

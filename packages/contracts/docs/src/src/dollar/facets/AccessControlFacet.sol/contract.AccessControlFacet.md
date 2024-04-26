@@ -1,5 +1,5 @@
 # AccessControlFacet
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/8aaa03cffd9aba9b0325a42c35c9bebd3a97267d/src/dollar/facets/AccessControlFacet.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/facets/AccessControlFacet.sol)
 
 **Inherits:**
 [Modifiers](/src/dollar/libraries/LibAppStorage.sol/contract.Modifiers.md), [IAccessControl](/src/dollar/interfaces/IAccessControl.sol/interface.IAccessControl.md), [AccessControlInternal](/src/dollar/access/AccessControlInternal.sol/abstract.AccessControlInternal.md)
