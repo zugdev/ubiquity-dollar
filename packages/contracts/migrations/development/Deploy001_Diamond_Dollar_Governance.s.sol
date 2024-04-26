@@ -16,7 +16,7 @@ import {DiamondLoupeFacet} from "../../src/dollar/facets/DiamondLoupeFacet.sol";
 import {ManagerFacet} from "../../src/dollar/facets/ManagerFacet.sol";
 import {OwnershipFacet} from "../../src/dollar/facets/OwnershipFacet.sol";
 import {UbiquityPoolFacet} from "../../src/dollar/facets/UbiquityPoolFacet.sol";
-import {ICurveStableSwapMetaNG} from "../../src/dollar/interfaces/ICurveStableSwapMetaNG.sol";
+import {ICurveStableSwapNG} from "../../src/dollar/interfaces/ICurveStableSwapNG.sol";
 import {ICurveTwocryptoOptimized} from "../../src/dollar/interfaces/ICurveTwocryptoOptimized.sol";
 import {IDiamondCut} from "../../src/dollar/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../../src/dollar/interfaces/IDiamondLoupe.sol";
@@ -26,7 +26,7 @@ import {LibAccessControl} from "../../src/dollar/libraries/LibAccessControl.sol"
 import {AppStorage, LibAppStorage, Modifiers} from "../../src/dollar/libraries/LibAppStorage.sol";
 import {LibDiamond} from "../../src/dollar/libraries/LibDiamond.sol";
 import {MockChainLinkFeed} from "../../src/dollar/mocks/MockChainLinkFeed.sol";
-import {MockCurveStableSwapMetaNG} from "../../src/dollar/mocks/MockCurveStableSwapMetaNG.sol";
+import {MockCurveStableSwapNG} from "../../src/dollar/mocks/MockCurveStableSwapNG.sol";
 import {MockCurveTwocryptoOptimized} from "../../src/dollar/mocks/MockCurveTwocryptoOptimized.sol";
 import {MockERC20} from "../../src/dollar/mocks/MockERC20.sol";
 import {DiamondTestHelper} from "../../test/helpers/DiamondTestHelper.sol";
@@ -129,8 +129,7 @@ contract Deploy001_Diamond_Dollar_Governance is Script, DiamondTestHelper {
     // oracle related contracts
     AggregatorV3Interface chainLinkPriceFeedEth; // chainlink ETH/USD price feed
     AggregatorV3Interface chainLinkPriceFeedLusd; // chainlink LUSD/USD price feed
-    IERC20 curveTriPoolLpToken; // Curve's 3CRV-LP token
-    ICurveStableSwapMetaNG curveDollarMetaPool; // Curve's Dollar-3CRVLP metapool
+    ICurveStableSwapNG curveStableDollarPlainPool; // Curve's LUSD-Dollar plain pool
     ICurveTwocryptoOptimized curveGovernanceEthPool; // Curve's Governance-WETH crypto pool
 
     // collateral ERC20 token used in UbiquityPoolFacet
@@ -408,22 +407,22 @@ contract Deploy001_Diamond_Dollar_Governance is Script, DiamondTestHelper {
      * - oracle related contracts
      * - Governance token related contracts
      *
-     * @dev Ubiquity protocol supports 4 oracles:
-     * 1. Curve's Dollar-3CRVLP metapool to fetch Dollar prices
-     * 2. Chainlink's price feed (used in UbiquityPool) to fetch collateral token prices in USD
-     * 3. Chainlink's price feed (used in UbiquityPool) to fetch ETH/USD price
-     * 4. Curve's Governance-WETH crypto pool to fetch Governance/ETH price
+     * @dev Ubiquity protocol supports 5 oracles:
+     * 1. Curve's LUSD-Dollar plain pool to fetch Dollar prices
+     * 2. Chainlink's price feed (used in UbiquityPool) to fetch LUSD/USD price (for getting Dollar price in USD)
+     * 3. Chainlink's price feed (used in UbiquityPool) to fetch collateral token prices in USD (for getting collateral price in USD)
+     * 4. Chainlink's price feed (used in UbiquityPool) to fetch ETH/USD price
+     * 5. Curve's Governance-WETH crypto pool to fetch Governance/ETH price
      *
      * There are 2 migrations (deployment scripts):
      * 1. Development (for usage in testnet and local anvil instance)
      * 2. Mainnet (for production usage in mainnet)
      *
      * Development migration deploys (for ease of debugging) mocks of:
-     * - Chainlink collateral price feed contract
      * - Chainlink ETH/USD price feed contract
-     * - 3CRVLP ERC20 token
+     * - Chainlink LUSD/USD price feed contract (for getting Dollar and collateral prices in USD)
      * - WETH token
-     * - Curve's Dollar-3CRVLP metapool contract
+     * - Curve's LUSD-Dollar plain pool contract
      * - Curve's Governance-WETH crypto pool contract
      */
     function afterRun() public virtual {
@@ -464,7 +463,7 @@ contract Deploy001_Diamond_Dollar_Governance is Script, DiamondTestHelper {
             1 // answered in round
         );
 
-        // set price feed address and threshold in seconds
+        // set collateral price feed address and threshold in seconds
         ubiquityPoolFacet.setCollateralChainLinkPriceFeed(
             address(collateralToken), // collateral token address
             address(chainLinkPriceFeedLusd), // price feed address
@@ -474,41 +473,45 @@ contract Deploy001_Diamond_Dollar_Governance is Script, DiamondTestHelper {
         // fetch latest prices from chainlink for collateral with index 0
         ubiquityPoolFacet.updateChainLinkCollateralPrice(0);
 
+        // set Stable/USD price feed address and threshold in seconds
+        ubiquityPoolFacet.setStableUsdChainLinkPriceFeed(
+            address(chainLinkPriceFeedLusd), // price feed address
+            CHAINLINK_PRICE_FEED_THRESHOLD // price feed staleness threshold in seconds
+        );
+
         // stop sending admin transactions
         vm.stopBroadcast();
 
         //=========================================
-        // Curve's Dollar-3CRVLP metapool deploy
+        // Curve's LUSD-Dollar plain pool deploy
         //=========================================
 
         // start sending owner transactions
         vm.startBroadcast(ownerPrivateKey);
 
-        // deploy mock 3CRV-LP token
-        curveTriPoolLpToken = new MockERC20(
-            "Curve.fi DAI/USDC/USDT",
-            "3Crv",
-            18
-        );
-
-        // deploy mock Curve's Dollar-3CRVLP metapool
-        curveDollarMetaPool = new MockCurveStableSwapMetaNG(
-            address(dollarToken),
-            address(curveTriPoolLpToken)
+        // Deploy mock Curve's LUSD-Dollar plain pool.
+        // Since we're using LUSD both as collateral and Dollar token pair
+        // in Curve's plain pool we don't deploy another mock of the "stable" coin
+        // paired to Dollar and simply use collateral token (i.e. LUSD).
+        curveStableDollarPlainPool = new MockCurveStableSwapNG(
+            address(collateralToken),
+            address(dollarToken)
         );
 
         // stop sending owner transactions
         vm.stopBroadcast();
 
         //========================================
-        // Curve's Dollar-3CRVLP metapool setup
+        // Curve's LUSD-Dollar plain pool setup
         //========================================
 
         // start sending admin transactions
         vm.startBroadcast(adminPrivateKey);
 
-        // set curve's metapool in manager facet
-        managerFacet.setStableSwapMetaPoolAddress(address(curveDollarMetaPool));
+        // set curve's plain pool in manager facet
+        managerFacet.setStableSwapPlainPoolAddress(
+            address(curveStableDollarPlainPool)
+        );
 
         // stop sending admin transactions
         vm.stopBroadcast();

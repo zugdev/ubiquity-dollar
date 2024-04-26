@@ -19,7 +19,7 @@ contract MockCurveStableSwapMetaNG is ICurveStableSwapMetaNG, MockERC20 {
         uint256[2] memory _amounts,
         uint256 _min_mint_amount,
         address _receiver
-    ) external returns (uint256 result) {
+    ) public returns (uint256 result) {
         mint(
             _receiver,
             _min_mint_amount == 0

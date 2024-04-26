@@ -55,11 +55,12 @@ contract Deploy001_Diamond_Dollar_Governance is
      * we need to use already deployed contracts while `Deploy001_Diamond_Dollar_Governance_Development`
      * deploys all oracle and Governance token related contracts from scratch for ease of debugging.
      *
-     * @dev Ubiquity protocol supports 4 oracles:
-     * 1. Curve's Dollar-3CRVLP metapool to fetch Dollar prices
-     * 2. Chainlink's price feed (used in UbiquityPool) to fetch collateral token prices in USD
-     * 3. Chainlink's price feed (used in UbiquityPool) to fetch ETH/USD price
-     * 4. Curve's Governance-WETH crypto pool to fetch Governance/ETH price
+     * @dev Ubiquity protocol supports 5 oracles:
+     * 1. Curve's LUSD-Dollar plain pool to fetch Dollar prices
+     * 2. Chainlink's price feed (used in UbiquityPool) to fetch LUSD/USD price (for getting Dollar price in USD)
+     * 3. Chainlink's price feed (used in UbiquityPool) to fetch collateral token prices in USD (for getting collateral price in USD)
+     * 4. Chainlink's price feed (used in UbiquityPool) to fetch ETH/USD price
+     * 5. Curve's Governance-WETH crypto pool to fetch Governance/ETH price
      *
      * There are 2 migrations (deployment scripts):
      * 1. Development (for usage in testnet and local anvil instance)
@@ -67,6 +68,7 @@ contract Deploy001_Diamond_Dollar_Governance is
      *
      * Mainnet (i.e. production) migration uses already deployed contracts for:
      * - Chainlink collateral price feed contract
+     * - Chainlink Stable/USD price feed contract (here "Stable" refers to the LUSD token from Curve's LUSD-Dollar plain pool)
      * - UbiquityAlgorithmicDollarManager contract
      * - UbiquityGovernance token contract
      * - Chainlink ETH/USD price feed
@@ -104,7 +106,7 @@ contract Deploy001_Diamond_Dollar_Governance is
             chainlinkPriceFeedAddressLusd
         );
 
-        // set price feed
+        // set collateral price feed
         ubiquityPoolFacet.setCollateralChainLinkPriceFeed(
             address(collateralToken), // collateral token address
             address(chainLinkPriceFeedLusd), // price feed address
@@ -114,46 +116,68 @@ contract Deploy001_Diamond_Dollar_Governance is
         // fetch latest prices from chainlink for collateral with index 0
         ubiquityPoolFacet.updateChainLinkCollateralPrice(0);
 
+        // set Stable/Dollar price feed
+        ubiquityPoolFacet.setStableUsdChainLinkPriceFeed(
+            address(chainLinkPriceFeedLusd), // price feed address
+            CHAINLINK_PRICE_FEED_THRESHOLD // price feed staleness threshold in seconds
+        );
+
         // stop sending admin transactions
         vm.stopBroadcast();
 
         //=========================================
-        // Curve's Dollar-3CRVLP metapool deploy
+        // Curve's LUSD-Dollar plain pool deploy
         //=========================================
 
         // start sending owner transactions
         vm.startBroadcast(ownerPrivateKey);
 
-        // deploy Curve Dollar-3CRV metapool
-        address curveDollarMetaPoolAddress = ICurveStableSwapFactoryNG(
+        // prepare parameters
+        address[] memory plainPoolCoins = new address[](2);
+        plainPoolCoins[0] = address(collateralToken);
+        plainPoolCoins[1] = address(dollarToken);
+
+        uint8[] memory plainPoolAssetTypes = new uint8[](2);
+        plainPoolAssetTypes[0] = 0;
+        plainPoolAssetTypes[1] = 0;
+
+        bytes4[] memory plainPoolMethodIds = new bytes4[](2);
+        plainPoolMethodIds[0] = bytes4("");
+        plainPoolMethodIds[1] = bytes4("");
+
+        address[] memory plainPoolTokenOracleAddresses = new address[](2);
+        plainPoolTokenOracleAddresses[0] = address(0);
+        plainPoolTokenOracleAddresses[1] = address(0);
+
+        // deploy Curve LUSD-Dollar plain pool
+        address curveDollarPlainPoolAddress = ICurveStableSwapFactoryNG(
             0x6A8cbed756804B16E05E741eDaBd5cB544AE21bf
-        ).deploy_metapool(
-                0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7, // Curve 3pool (DAI-USDT-USDC) address
-                "Dollar/3CRV", // pool name
-                "Dollar3CRV", // LP token symbol
-                address(dollarToken), // main token
+        ).deploy_plain_pool(
+                "LUSD/Dollar", // pool name
+                "LUSDDollar", // LP token symbol
+                plainPoolCoins, // coins used in the pool
                 100, // amplification coefficient
-                40000000, // trade fee, 0.04%
+                4000000, // trade fee, 0.04%
                 20000000000, // off-peg fee multiplier
                 2597, // moving average time value, 2597 = 1800 seconds
-                0, // metapool implementation index
-                0, // asset type
-                "", // method id for oracle asset type (not applicable for Dollar)
-                address(0) // token oracle address (not applicable for Dollar)
+                0, // plain pool implementation index
+                plainPoolAssetTypes, // asset types
+                plainPoolMethodIds, // method ids for oracle asset type (not applicable for Dollar)
+                plainPoolTokenOracleAddresses // token oracle addresses (not applicable for Dollar)
             );
 
         // stop sending owner transactions
         vm.stopBroadcast();
 
         //========================================
-        // Curve's Dollar-3CRVLP metapool setup
+        // Curve's LUSD-Dollar plain pool setup
         //========================================
 
         // start sending admin transactions
         vm.startBroadcast(adminPrivateKey);
 
-        // set curve's metapool in manager facet
-        managerFacet.setStableSwapMetaPoolAddress(curveDollarMetaPoolAddress);
+        // set curve's plain pool in manager facet
+        managerFacet.setStableSwapPlainPoolAddress(curveDollarPlainPoolAddress);
 
         // stop sending admin transactions
         vm.stopBroadcast();
