@@ -150,7 +150,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     function testMintDollar_FuzzCollateralRatio(
         uint newCollateralRatio
     ) public {
-        vm.assume(newCollateralRatio <= 100);
+        vm.assume(newCollateralRatio <= 1_000_000);
         vm.prank(admin);
         ubiquityPoolFacet.setPriceThresholds(
             1000000, // mint threshold
