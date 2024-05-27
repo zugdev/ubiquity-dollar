@@ -214,21 +214,25 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         );
     }
 
+    /**
+     * @notice Fuzz Dollar minting scenario for Dollar amount slippage. Max slippage is the acceptable
+     *         difference between amount asked to mint, and the actual minted amount, including the minting fee.
+     *         As an example if mint fee is set to 1%, any value above 99% of the amount should revert
+     *         the mint with `Dollar slippage` error.
+     * @param dollarOutMin Minimal Ubiquity Dollar amount to mint, including the minting fee.
+     */
     function testMintDollar_FuzzDollarAmountSlippage(
-        uint256 dollarAmount
+        uint256 dollarOutMin
     ) public {
+        vm.assume(dollarOutMin >= 99e18);
         vm.prank(admin);
-        ubiquityPoolFacet.setPriceThresholds(
-            1000000, // mint threshold
-            990000 // redeem threshold
-        );
-
+        curveDollarPlainPool.updateMockParams(1.01e18);
         vm.prank(user);
         vm.expectRevert("Dollar slippage");
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
-            100e18, // min amount of Dollars to mint
+            dollarOutMin, // min amount of Dollars to mint
             100e18, // max collateral to send
             0, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
