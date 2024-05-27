@@ -190,9 +190,18 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         assertEq(governanceToken.balanceOf(user), 2000e18 - governanceNeeded);
     }
 
+    /**
+     * @notice Fuzz Dollar minting scenario for Dollar price below threshold
+     * @param dollarPriceUsd Ubiquity Dollar token price from Curve pool (Stable coin/Ubiquity Dollar)
+     */
     function testMintDollar_FuzzDollarPriceUsdTooLow(
         uint256 dollarPriceUsd
     ) public {
+        // Stable coin/USD ChainLink feed is mocked to $1.00
+        // Mint price threshold set up to $1.01 == 1010000
+        // Fuzz Dollar price in Curve plain pool (1 Stable coin / x Dollar)
+        vm.assume(dollarPriceUsd < 1010000000000000000); // 1.01e18 , less than threshold
+        curveDollarPlainPool.updateMockParams(dollarPriceUsd);
         vm.prank(user);
         vm.expectRevert("Dollar price too low");
         ubiquityPoolFacet.mintDollar(
