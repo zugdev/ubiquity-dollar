@@ -136,8 +136,8 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
 
         // mint 2000 Governance tokens to the user
         deal(address(governanceToken), user, 2000e18);
-        // mint 100 collateral tokens to the user
-        collateralToken.mint(address(user), 100e18);
+        // mint 2000 collateral tokens to the user
+        collateralToken.mint(address(user), 2000e18);
         // user approves the pool to transfer collateral
         vm.prank(user);
         collateralToken.approve(address(ubiquityPoolFacet), 100e18);
@@ -151,21 +151,28 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         uint newCollateralRatio
     ) public {
         vm.assume(newCollateralRatio <= 1_000_000);
-        vm.prank(admin);
-        ubiquityPoolFacet.setPriceThresholds(
-            1000000, // mint threshold
-            990000 // redeem threshold
-        );
-
         // fuzz collateral ratio
         vm.prank(admin);
         ubiquityPoolFacet.setCollateralRatio(newCollateralRatio);
+        curveDollarPlainPool.updateMockParams(1.01e18);
+        // set ETH/Governance initial price to 2k in Curve pool mock (2k GOV == 1 ETH, 1 GOV == 1 USD)
+        curveGovernanceEthPool.updateMockParams(2_000e18);
 
         // balances before
         assertEq(collateralToken.balanceOf(address(ubiquityPoolFacet)), 0);
         assertEq(dollarToken.balanceOf(user), 0);
         assertEq(governanceToken.balanceOf(user), 2000e18);
+        assertEq(collateralToken.balanceOf(user), 2000e18);
 
+        // dollars and governance tokens should be provided to meet ratio requirements
+        uint256 maxCollateralIn;
+        if (newCollateralRatio == 0) maxCollateralIn = 0;
+        else maxCollateralIn = (1100e18) * (newCollateralRatio / 1_000_000);
+        uint256 maxGovernanceIn = 1100e18 - maxCollateralIn;
+
+        console.log(newCollateralRatio);
+        console.log(maxCollateralIn);
+        console.log(maxGovernanceIn);
         vm.prank(user);
         (
             uint256 totalDollarMint,
@@ -175,19 +182,21 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
                 0, // collateral index
                 100e18, // Dollar amount
                 99e18, // min amount of Dollars to mint
-                100e18, // max collateral to send
-                1100e18, // max Governance tokens to send
-                false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+                1100e18, // max collateral to send
+                maxGovernanceIn, // max Governance tokens to send
+                false // fractional mint allowed
             );
 
         assertEq(totalDollarMint, 99e18);
-        assertEq(collateralNeeded, 0);
-        assertEq(governanceNeeded, 1000000000000000000000); // 1000 = 100 Dollar * $0.1 Governance from oracle
 
         // balances after
-        assertEq(collateralToken.balanceOf(address(ubiquityPoolFacet)), 0);
         assertEq(dollarToken.balanceOf(user), 99e18);
+        assertEq(
+            collateralToken.balanceOf(address(ubiquityPoolFacet)),
+            collateralNeeded
+        );
         assertEq(governanceToken.balanceOf(user), 2000e18 - governanceNeeded);
+        assertEq(collateralToken.balanceOf(user), 2000e18 - collateralNeeded);
     }
 
     /**
@@ -250,7 +259,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
-            90e18, // min amount of Dollars to mint
+            99e18, // min amount of Dollars to mint
             maxCollateralIn, // max collateral to send
             0, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
@@ -260,7 +269,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     function testMintDollar_FuzzGovernanceAmountSlippage(
         uint256 maxGovernanceIn
     ) public {
-        vm.assume(maxGovernanceIn <= 110e18);
+        vm.assume(maxGovernanceIn <= 101e18);
         vm.prank(admin);
         curveDollarPlainPool.updateMockParams(1.01e18);
         // set ETH/Governance initial price to 2k in Curve pool mock (2k GOV == 1 ETH, 1 GOV == 1 USD)
@@ -273,7 +282,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
-            98e18, // min amount of Dollars to mint (2% fee included)
+            99e18, // min amount of Dollars to mint (1% fee included)
             0, // max collateral to send
             maxGovernanceIn, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
