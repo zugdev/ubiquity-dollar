@@ -240,47 +240,42 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     }
 
     function testMintDollar_FuzzCollateralAmountSlippage(
-        uint256 collateralAmount
+        uint256 maxCollateralIn
     ) public {
+        vm.assume(maxCollateralIn <= 100e18);
         vm.prank(admin);
-        ubiquityPoolFacet.setPriceThresholds(
-            1000000, // mint threshold
-            990000 // redeem threshold
-        );
-
+        curveDollarPlainPool.updateMockParams(1.01e18);
         vm.prank(user);
         vm.expectRevert("Collateral slippage");
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
             90e18, // min amount of Dollars to mint
-            10e18, // max collateral to send
+            maxCollateralIn, // max collateral to send
             0, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
         );
     }
 
     function testMintDollar_FuzzGovernanceAmountSlippage(
-        uint256 governanceAmount
+        uint256 maxGovernanceIn
     ) public {
+        vm.assume(maxGovernanceIn <= 110e18);
         vm.prank(admin);
-        ubiquityPoolFacet.setPriceThresholds(
-            1000000, // mint threshold
-            990000 // redeem threshold
-        );
-
+        curveDollarPlainPool.updateMockParams(1.01e18);
+        // set ETH/Governance initial price to 2k in Curve pool mock (2k GOV == 1 ETH, 1 GOV == 1 USD)
+        curveGovernanceEthPool.updateMockParams(2_000e18);
         // admin sets collateral ratio to 0%
         vm.prank(admin);
         ubiquityPoolFacet.setCollateralRatio(0);
-
         vm.prank(user);
         vm.expectRevert("Governance slippage");
         ubiquityPoolFacet.mintDollar(
             0, // collateral index
             100e18, // Dollar amount
-            90e18, // min amount of Dollars to mint
-            10e18, // max collateral to send
-            0, // max Governance tokens to send
+            98e18, // min amount of Dollars to mint (2% fee included)
+            0, // max collateral to send
+            maxGovernanceIn, // max Governance tokens to send
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
         );
     }
