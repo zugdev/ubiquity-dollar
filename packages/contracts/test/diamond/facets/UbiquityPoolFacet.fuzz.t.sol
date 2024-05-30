@@ -296,4 +296,39 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
             false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
         );
     }
+
+    //========================
+    // Dollar Redeem fuzz tests
+    //========================
+
+    function testRedeemDollar_FuzzCollateralRatio(
+        uint256 newCollateralRatio
+    ) public {}
+
+    /**
+     * @notice Fuzz Dollar redeeming scenario for Dollar price above threshold
+     * @param dollarPriceUsd Ubiquity Dollar token price from Curve pool (Stable coin/Ubiquity Dollar)
+     */
+    function testRedeemDollar_FuzzDollarPriceUsdTooHigh(
+        uint256 dollarPriceUsd
+    ) public {}
+
+    /**
+     * @notice Fuzz Dollar redeeming scenario for Dollar amount slippage. Max slippage is the acceptable
+     *         difference between amount asked to redeem, and the actual redeemed amount, including the redeem fee.
+     *         As an example if redeem fee is set to 2%, any value above 98% of the amount should revert
+     *         the redeem with `Dollar slippage` error.
+     * @param dollarOutMin Minimal Ubiquity Dollar amount to redeem, including the redeeming fee.
+     */
+    function testRedeemDollar_FuzzDollarAmountSlippage(
+        uint256 dollarOutMin
+    ) public {}
+
+    function testRedeemDollar_FuzzCollateralAmountSlippage(
+        uint256 maxCollateralIn
+    ) public {}
+
+    function testRedeemDollar_FuzzGovernanceAmountSlippage(
+        uint256 maxGovernanceIn
+    ) public {}
 }
