@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "forge-std/console.sol";
+import "abdk/ABDKMathQuad.sol";
 import {DiamondTestSetup} from "../DiamondTestSetup.sol";
 import {IDollarAmoMinter} from "../../../src/dollar/interfaces/IDollarAmoMinter.sol";
 import {LibUbiquityPool} from "../../../src/dollar/libraries/LibUbiquityPool.sol";
@@ -11,6 +12,9 @@ import {MockCurveStableSwapNG} from "../../../src/dollar/mocks/MockCurveStableSw
 import {MockCurveTwocryptoOptimized} from "../../../src/dollar/mocks/MockCurveTwocryptoOptimized.sol";
 
 contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
+    using ABDKMathQuad for uint256;
+    using ABDKMathQuad for bytes16;
+
     // mock three tokens: collateral token, stable token, wrapped ETH token
     MockERC20 collateralToken;
     MockERC20 stableToken;
@@ -148,9 +152,10 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     //========================
 
     function testMintDollar_FuzzCollateralRatio(
-        uint newCollateralRatio
+        uint256 newCollateralRatio
     ) public {
-        vm.assume(newCollateralRatio <= 1_000_000);
+        uint256 maxCollateralRatio = 1_000_000; // 100%
+        vm.assume(newCollateralRatio <= maxCollateralRatio);
         // fuzz collateral ratio
         vm.prank(admin);
         ubiquityPoolFacet.setCollateralRatio(newCollateralRatio);
@@ -166,13 +171,16 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
 
         // dollars and governance tokens should be provided to meet ratio requirements
         uint256 maxCollateralIn;
+        uint256 totalCollateralMaxAmount = 100e18; // total collateral from both should be enough to mint Dollar tokens
         if (newCollateralRatio == 0) maxCollateralIn = 0;
-        else maxCollateralIn = (1100e18) * (newCollateralRatio / 1_000_000);
-        uint256 maxGovernanceIn = 1100e18 - maxCollateralIn;
+        else
+            maxCollateralIn = totalCollateralMaxAmount
+                .fromUInt()
+                .mul(newCollateralRatio.fromUInt())
+                .div(maxCollateralRatio.fromUInt())
+                .toUInt();
+        uint256 maxGovernanceIn = totalCollateralMaxAmount - maxCollateralIn;
 
-        console.log(newCollateralRatio);
-        console.log(maxCollateralIn);
-        console.log(maxGovernanceIn);
         vm.prank(user);
         (
             uint256 totalDollarMint,
@@ -182,7 +190,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
                 0, // collateral index
                 100e18, // Dollar amount
                 99e18, // min amount of Dollars to mint
-                1100e18, // max collateral to send
+                maxCollateralIn, // max collateral to send
                 maxGovernanceIn, // max Governance tokens to send
                 false // fractional mint allowed
             );
