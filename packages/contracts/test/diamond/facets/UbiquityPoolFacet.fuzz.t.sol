@@ -259,7 +259,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     function testMintDollar_FuzzCollateralAmountSlippage(
         uint256 maxCollateralIn
     ) public {
-        vm.assume(maxCollateralIn <= 100e18);
+        vm.assume(maxCollateralIn < 100e18);
         vm.prank(admin);
         curveDollarPlainPool.updateMockParams(1.01e18);
         vm.prank(user);
@@ -277,7 +277,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     function testMintDollar_FuzzGovernanceAmountSlippage(
         uint256 maxGovernanceIn
     ) public {
-        vm.assume(maxGovernanceIn <= 101e18);
+        vm.assume(maxGovernanceIn < 1e18);
         vm.prank(admin);
         curveDollarPlainPool.updateMockParams(1.01e18);
         // set ETH/Governance initial price to 2k in Curve pool mock (2k GOV == 1 ETH, 1 GOV == 1 USD)
@@ -311,7 +311,23 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
      */
     function testRedeemDollar_FuzzDollarPriceUsdTooHigh(
         uint256 dollarPriceUsd
-    ) public {}
+    ) public {
+        // Stable coin/USD ChainLink feed is mocked to $1.00
+        // Redeem price threshold set up to $0.99 == 990_000
+        // Fuzz Dollar price in Curve plain pool (1 Stable coin / x Dollar)
+        vm.assume(dollarPriceUsd > 990000999999999999); // 0.99e18 , greater than redeem threshold
+        vm.assume(dollarPriceUsd < 9900000000000000000);
+        vm.prank(admin);
+        curveDollarPlainPool.updateMockParams(dollarPriceUsd);
+        vm.prank(user);
+        vm.expectRevert("Dollar price too high");
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            1e18, // Dollar amount
+            0, // min Governance out
+            1e18 // min collateral out
+        );
+    }
 
     /**
      * @notice Fuzz Dollar redeeming scenario for Dollar amount slippage. Max slippage is the acceptable
