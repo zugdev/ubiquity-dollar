@@ -330,19 +330,50 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     }
 
     /**
-     * @notice Fuzz Dollar redeeming scenario for Dollar amount slippage. Max slippage is the acceptable
-     *         difference between amount asked to redeem, and the actual redeemed amount, including the redeem fee.
-     *         As an example if redeem fee is set to 2%, any value above 98% of the amount should revert
-     *         the redeem with `Dollar slippage` error.
-     * @param dollarOutMin Minimal Ubiquity Dollar amount to redeem, including the redeeming fee.
+     * @notice Fuzz Dollar redeeming scenario for insufficient collateral available in pool.
+     * @param collateralOut Minimal collateral amount to redeem.
      */
-    function testRedeemDollar_FuzzDollarAmountSlippage(
-        uint256 dollarOutMin
-    ) public {}
+    function testRedeemDollar_FuzzInsufficientCollateralAvailable(
+        uint256 collateralOut
+    ) public {
+        vm.assume(collateralOut > 1e18);
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(0.99e18);
+        collateralToken.mint(address(ubiquityPoolFacet), 1e18);
+        dollarToken.mint(address(user), 1e18);
+        vm.stopPrank();
+        vm.prank(user);
+        vm.expectRevert("Insufficient pool collateral");
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            10e18, // Dollar amount
+            0, // min Governance out
+            collateralOut // min collateral out
+        );
+    }
 
-    function testRedeemDollar_FuzzCollateralAmountSlippage(
-        uint256 maxCollateralIn
-    ) public {}
+    /**
+     * @notice Fuzz Dollar redeeming scenario for collateral slippage.
+     * @param collateralOut Minimal collateral amount to redeem.
+     */
+    function testRedeemDollar_FuzzCollateralSlippage(
+        uint256 collateralOut
+    ) public {
+        vm.assume(collateralOut >= 1e18);
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(0.99e18);
+        collateralToken.mint(address(ubiquityPoolFacet), 100e18);
+        dollarToken.mint(address(user), 1e18);
+        vm.stopPrank();
+        vm.prank(user);
+        vm.expectRevert("Collateral slippage");
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            1e18, // Dollar amount
+            0, // min Governance out
+            collateralOut // min collateral out
+        );
+    }
 
     function testRedeemDollar_FuzzGovernanceAmountSlippage(
         uint256 maxGovernanceIn
