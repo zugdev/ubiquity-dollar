@@ -375,7 +375,26 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         );
     }
 
+    /**
+     * @notice Fuzz Dollar redeeming scenario for governance token slippage.
+     * @param governanceOut Minimal governance token amount to redeem.
+     */
     function testRedeemDollar_FuzzGovernanceAmountSlippage(
-        uint256 maxGovernanceIn
-    ) public {}
+        uint256 governanceOut
+    ) public {
+        vm.assume(governanceOut >= 1e18);
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(0.99e18);
+        collateralToken.mint(address(ubiquityPoolFacet), 100e18);
+        dollarToken.mint(address(user), 1e18);
+        vm.stopPrank();
+        vm.prank(user);
+        vm.expectRevert("Governance slippage");
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            1e18, // Dollar amount
+            governanceOut, // min Governance out
+            0 // min collateral out
+        );
+    }
 }
