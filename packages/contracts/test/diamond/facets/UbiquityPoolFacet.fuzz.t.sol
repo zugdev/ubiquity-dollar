@@ -301,9 +301,28 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     // Dollar Redeem fuzz tests
     //========================
 
-    function testRedeemDollar_FuzzCollateralRatio(
-        uint256 newCollateralRatio
-    ) public {}
+    function testRedeemDollar_FuzzRedemptionDelayBlocks(
+        uint8 delayBlocks
+    ) public {
+        vm.assume(delayBlocks > 0);
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(0.99e18);
+        collateralToken.mint(address(ubiquityPoolFacet), 100e18);
+        dollarToken.mint(address(user), 1e18);
+        // set redemption delay to delayBlocks
+        ubiquityPoolFacet.setRedemptionDelayBlocks(delayBlocks);
+        vm.stopPrank();
+        vm.prank(user);
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            1e18, // Dollar amount
+            0, // min Governance out
+            1e17 // min collateral out
+        );
+        vm.roll(delayBlocks); // redemption possible at delayBlocks + 1 block, before that revert
+        vm.expectRevert("Too soon to collect redemption");
+        ubiquityPoolFacet.collectRedemption(0);
+    }
 
     /**
      * @notice Fuzz Dollar redeeming scenario for Dollar price above threshold
