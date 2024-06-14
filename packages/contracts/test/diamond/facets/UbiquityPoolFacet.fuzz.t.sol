@@ -297,6 +297,35 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
         );
     }
 
+    function testMintDollar_FuzzCorrectDollarAmountMinted(
+        uint256 tokenAmountToMint
+    ) public {
+        vm.assume(tokenAmountToMint < 50_000e18); // collateral pool ceiling also set to 50k tokens
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(1.01e18);
+        // set ETH/Governance initial price to 2k in Curve pool mock (2k GOV == 1 ETH, 1 GOV == 1 USD)
+        curveGovernanceEthPool.updateMockParams(2_000e18);
+        // admin sets collateral ratio to 0%
+        ubiquityPoolFacet.setCollateralRatio(0);
+        deal(address(governanceToken), user, 50000e18);
+        vm.stopPrank();
+        uint256 minDollarsToMint = tokenAmountToMint
+            .fromUInt()
+            .mul(uint(99).fromUInt())
+            .div(uint(100).fromUInt())
+            .toUInt(); // dollars to mint (1% fee included)
+        vm.prank(user);
+        (uint256 dollarsMinted, , ) = ubiquityPoolFacet.mintDollar(
+            0, // collateral index
+            tokenAmountToMint, // Dollar amount to mint
+            minDollarsToMint,
+            0, // max collateral to send
+            tokenAmountToMint, // max Governance tokens to send (1 GOV == 1 USD)
+            false // force 1-to-1 mint (i.e. provide only collateral without Governance tokens)
+        );
+        assertEq(dollarsMinted, minDollarsToMint);
+    }
+
     //========================
     // Dollar Redeem fuzz tests
     //========================
