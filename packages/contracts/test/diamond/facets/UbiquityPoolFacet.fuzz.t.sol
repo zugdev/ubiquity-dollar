@@ -445,4 +445,30 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
             0 // min collateral out
         );
     }
+
+    function testMintDollar_FuzzCorrectDollarAmountRedeemed(
+        uint256 tokenAmountToRedeem
+    ) public {
+        vm.assume(tokenAmountToRedeem < 50_000e18);
+        vm.startPrank(admin);
+        curveDollarPlainPool.updateMockParams(0.99e18);
+        dollarToken.mint(address(user), tokenAmountToRedeem); // make sure user has enough Dollars
+        collateralToken.mint(address(ubiquityPoolFacet), tokenAmountToRedeem); // make sure pool has enough collateral
+        uint256 dollarTokenBalanceBeforeRedeem = dollarToken.balanceOf(user);
+        vm.stopPrank();
+        vm.prank(user);
+        ubiquityPoolFacet.redeemDollar(
+            0, // collateral index
+            tokenAmountToRedeem, // Dollar amount
+            0, // min Governance out
+            0 // min collateral out
+        );
+        vm.roll(3); // redemption delay set to 2 blocks
+        ubiquityPoolFacet.collectRedemption(0);
+        // balances after
+        assertEq(
+            dollarToken.balanceOf(user),
+            dollarTokenBalanceBeforeRedeem - tokenAmountToRedeem
+        );
+    }
 }
