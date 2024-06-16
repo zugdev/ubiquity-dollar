@@ -42,4 +42,4 @@ src = 'src/dollar'
 
 [profile.intense.fuzz]
 runs = 100000
-max_test_rejects = 90000
+max_test_rejects = 900000
