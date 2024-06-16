@@ -241,7 +241,7 @@ contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     function testMintDollar_FuzzDollarAmountSlippage(
         uint256 dollarOutMin
     ) public {
-        vm.assume(dollarOutMin >= 99e18);
+        vm.assume(dollarOutMin > 99e18);
         vm.prank(admin);
         curveDollarPlainPool.updateMockParams(1.01e18);
         vm.prank(user);
