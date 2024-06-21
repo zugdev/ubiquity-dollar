@@ -3,13 +3,13 @@ pragma solidity 0.8.19;
 
 import "forge-std/console.sol";
 import "abdk/ABDKMathQuad.sol";
-import {DiamondTestSetup} from "../DiamondTestSetup.sol";
-import {IDollarAmoMinter} from "../../../src/dollar/interfaces/IDollarAmoMinter.sol";
-import {LibUbiquityPool} from "../../../src/dollar/libraries/LibUbiquityPool.sol";
-import {MockChainLinkFeed} from "../../../src/dollar/mocks/MockChainLinkFeed.sol";
-import {MockERC20} from "../../../src/dollar/mocks/MockERC20.sol";
-import {MockCurveStableSwapNG} from "../../../src/dollar/mocks/MockCurveStableSwapNG.sol";
-import {MockCurveTwocryptoOptimized} from "../../../src/dollar/mocks/MockCurveTwocryptoOptimized.sol";
+import {DiamondTestSetup} from "../../../../test/diamond/DiamondTestSetup.sol";
+import {IDollarAmoMinter} from "../../../../src/dollar/interfaces/IDollarAmoMinter.sol";
+import {LibUbiquityPool} from "../../../../src/dollar/libraries/LibUbiquityPool.sol";
+import {MockChainLinkFeed} from "../../../../src/dollar/mocks/MockChainLinkFeed.sol";
+import {MockERC20} from "../../../../src/dollar/mocks/MockERC20.sol";
+import {MockCurveStableSwapNG} from "../../../../src/dollar/mocks/MockCurveStableSwapNG.sol";
+import {MockCurveTwocryptoOptimized} from "../../../../src/dollar/mocks/MockCurveTwocryptoOptimized.sol";
 
 contract UbiquityPoolFacetFuzzTest is DiamondTestSetup {
     using ABDKMathQuad for uint256;
