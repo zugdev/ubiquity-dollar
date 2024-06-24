@@ -1,5 +1,5 @@
 # ICurveStableSwapNG
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/interfaces/ICurveStableSwapNG.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/565aaa6bed7cb481fd57c9fc6a7b1052ff2aa816/src/dollar/interfaces/ICurveStableSwapNG.sol)
 
 **Inherits:**
 [ICurveStableSwapMetaNG](/src/dollar/interfaces/ICurveStableSwapMetaNG.sol/interface.ICurveStableSwapMetaNG.md)
