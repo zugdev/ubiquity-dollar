@@ -1,5 +1,5 @@
 # UbiquityCreditToken
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/core/UbiquityCreditToken.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/565aaa6bed7cb481fd57c9fc6a7b1052ff2aa816/src/dollar/core/UbiquityCreditToken.sol)
 
 **Inherits:**
 [ERC20Ubiquity](/src/dollar/core/ERC20Ubiquity.sol/abstract.ERC20Ubiquity.md)

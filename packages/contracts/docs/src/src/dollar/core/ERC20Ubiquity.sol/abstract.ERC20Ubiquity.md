@@ -1,5 +1,5 @@
 # ERC20Ubiquity
-[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/447ec1d83d6aa0044c753bd31ba3571a47b64509/src/dollar/core/ERC20Ubiquity.sol)
+[Git Source](https://github.com/ubiquity/ubiquity-dollar/blob/565aaa6bed7cb481fd57c9fc6a7b1052ff2aa816/src/dollar/core/ERC20Ubiquity.sol)
 
 **Inherits:**
 Initializable, UUPSUpgradeable, ERC20Upgradeable, ERC20PermitUpgradeable, ERC20PausableUpgradeable
