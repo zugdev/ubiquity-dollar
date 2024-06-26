@@ -4,4 +4,4 @@ export const Networks: Record<string, number> = {
   sepolia: 11155111,
 };
 
-export const FALLBACK_RPC = "https://eth.ubq.fi/v1/mainnet";
+export const FALLBACK_RPC = "https://rpc.ankr.com/eth";

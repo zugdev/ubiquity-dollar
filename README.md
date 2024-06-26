@@ -70,7 +70,7 @@ yarn workspace @ubiquity/dapp start # Run the web application at http://localhos
 ### Network Settings
 | Network | Chain ID | RPC Endpoint                  | Comment |
 |---------|----------|-------------------------------|---------|
-| `mainnet` | `1`        | `https://eth.ubq.fi/v1/mainnet` | Our dedicated mainnet gateway     |
+| `mainnet` | `1`        | `https://rpc.ankr.com/eth` | Public Mainnet Gateway    |
 | `anvil`   | `31337`    | `http://127.0.0.1:8545`         | Used for local development     |
 | `sepolia` | `11155111` | `https://ethereum-sepolia.publicnode.com` |Use any public available RPC for Sepolia testing |
 
