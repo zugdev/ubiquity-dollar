@@ -50,6 +50,7 @@ jobs:
   check_storage_layout:
     needs: provide_contracts
     runs-on: ubuntu-latest
+    if: ${{ needs.provide_contracts.outputs.matrix != '[]' && needs.provide_contracts.outputs.matrix != '' }}
 
     strategy:
       matrix:
