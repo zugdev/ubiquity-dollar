@@ -255,7 +255,7 @@ interface ICurveFactory {
     function base_pool_count() external view returns (uint256);
 
     /**
-     * @notice Returns fee reciever by pool address
+     * @notice Returns fee receiver by pool address
      * @param arg0 Pool address
      * @return Fee receiver
      */

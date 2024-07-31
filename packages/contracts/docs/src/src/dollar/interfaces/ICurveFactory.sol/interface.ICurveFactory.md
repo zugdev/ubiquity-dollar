@@ -519,7 +519,7 @@ function base_pool_count() external view returns (uint256);
 
 ### fee_receiver
 
-Returns fee reciever by pool address
+Returns fee receiver by pool address
 
 
 ```solidity

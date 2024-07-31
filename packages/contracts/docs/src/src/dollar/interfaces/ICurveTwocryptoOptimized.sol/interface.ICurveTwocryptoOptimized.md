@@ -8,7 +8,7 @@ Curve's CurveTwocryptoOptimized interface
 
 *Differences between Curve's crypto and stable swap meta pools (and how Ubiquity organization uses them):
 1. They contain different tokens:
-a) Curve's stable swap metapool containts Dollar/3CRVLP pair
+a) Curve's stable swap metapool contains Dollar/3CRVLP pair
 b) Curve's crypto pool contains Governance/ETH pair
 2. They use different bonding curve shapes:
 a) Curve's stable swap metapool is more straight (because underlying tokens are pegged to USD)
