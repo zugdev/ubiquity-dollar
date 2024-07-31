@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
  * 3. 10% (100 Dollars) goes for burning Dollar-Governance LP tokens:
  *   - Half of 10% Dollars are swapped for Governance tokens on a DEX
  *   - Governance tokens and half of 10% tokens are added as a liquidity to the Dollar-Governance DEX pool
- *   - Dollar-Governance LP tokens are transfered to 0 address (i.e. burning LP tokens)
+ *   - Dollar-Governance LP tokens are transferred to 0 address (i.e. burning LP tokens)
  * 4. 40% (400 Dollars) goes to the Staking contract:
  *   - Swap Dollars for 3CRV LP tokens in the Curve's Dollar-3CRV MetaPool
  *   - Add 3CRV LP tokens to the Curve Dollar-3CRV MetaPool
