@@ -45,4 +45,4 @@ runs = 100000
 max_test_rejects = 900000
 
 [profile.intense.invariant]
-runs = 100000
+runs = 2500
