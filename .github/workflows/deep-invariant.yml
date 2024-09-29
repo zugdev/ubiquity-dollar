@@ -5,7 +5,8 @@ on:
       - development
     paths:
       - '**.sol'
-
+  workflow_dispatch:
+    
 jobs:
   invariant-tests:
     name: Run Invariant Tests

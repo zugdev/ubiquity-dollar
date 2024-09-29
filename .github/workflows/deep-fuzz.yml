@@ -5,6 +5,7 @@ on:
       - development
     paths:
       - '**.sol'
+  workflow_dispatch:
 
 jobs:
   deep-fuzz:
