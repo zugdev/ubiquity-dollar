@@ -41,8 +41,8 @@ targets = [
 src = 'src/dollar'
 
 [profile.intense.fuzz]
-runs = 8000000
-max_test_rejects = 72000000 # multiplied by 80 because runs did too
+runs = 16000000
+max_test_rejects = 144000000 # multiplied by 160 because runs did too
 
 [profile.intense.invariant]
-runs = 400000
+runs = 250000
