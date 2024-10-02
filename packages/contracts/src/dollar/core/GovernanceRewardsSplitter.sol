@@ -26,7 +26,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  * tokens that apply fees during transfers, are likely to not be supported as expected.
  */
 contract GovernanceRewardsSplitter is Ownable {
-    IERC20 governanceToken = IERC20(address(0x0));
+    IERC20 public constant governanceToken = IERC20(address(0x0));
 
     event NewSplitConfiguration(
         uint256 indexed currentConfig,
