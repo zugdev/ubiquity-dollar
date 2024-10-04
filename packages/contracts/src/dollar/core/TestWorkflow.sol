@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 contract TestWorkflow {
+    address public owner;
     uint256 public value3;
     uint256 public value2;
     uint256 public value;
