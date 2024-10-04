@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 /**
  * @title GovernanceRewardsSplitter
@@ -15,40 +16,30 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  * account to a number of shares. Of all tokens that this contract receives, each account will then be able to claim
  * an amount proportional to the percentage of total shares they were assigned.
  *
- * This contract is configurable by owner, which means that at any time it's owner can update the split configuration.
- * The configuration is tracked through IDs and all previous configurations can be transparently checked.
- *
- * `GovernanceRewardsSplitter` follows a _pull payment_ model. This means that payments are not automatically forwarded to the
- * accounts but kept in this contract, and the actual transfer is triggered as a separate step by calling the {release}
+ * This contract is configurable by the owner, meaning the owner can update the split configuration at any time.
+ * `GovernanceRewardsSplitter` follows a _pull payment_ model, where payments are not automatically forwarded to the
+ * accounts but kept in this contract. The actual transfer is triggered as a separate step by calling the {release}
  * function.
  *
  * NOTE: This contract assumes that ERC20 tokens will behave similarly to native tokens (Ether). Rebasing tokens, and
  * tokens that apply fees during transfers, are likely to not be supported as expected.
  */
 contract GovernanceRewardsSplitter is Ownable {
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
+
     IERC20 public constant governanceToken = IERC20(address(0x0));
 
-    event NewSplitConfiguration(
-        uint256 indexed currentConfig,
-        address[] payees,
-        uint256[] shares
-    );
-    event PayeeAdded(
-        uint256 indexed currentConfig,
-        address account,
-        uint256 shares
-    );
+    event PayeeAdded(address account, uint256 shares);
+    event PayeeEdited(address account, uint256 newShares);
+    event PayeeDeleted(address account);
     event GovernanceTokenReleased(
         IERC20 governanceToken,
         address indexed to,
         uint256 amount
     );
 
-    /// @dev Split configuration is ID based, whenever a new config is set currentConfig is incremented.
-    uint256 public currentConfig;
-    mapping(uint256 => address[]) public _configToPayees;
-    mapping(uint256 => mapping(address => uint256)) public _configToShares;
-    mapping(uint256 => uint256) public _configTotalShares;
+    EnumerableMap.AddressToUintMap private _payeesToShares;
+    uint256 public totalShares;
 
     uint256 public governanceTokenTotalReleased;
     mapping(address => uint256) public accountToGovernanceTokenReleased;
@@ -67,11 +58,10 @@ contract GovernanceRewardsSplitter is Ownable {
         );
         require(payees.length > 0, "GovernanceRewardsSplitter: no payees");
 
-        // Initial configuration ID will be 1 as setNewConfig will increment currentConfig
-        currentConfig = 0;
-
-        // This will set an initial configuration of payees and shares
-        setNewConfig(payees, shares_);
+        // Initialize payees and shares
+        for (uint256 i = 0; i < payees.length; i++) {
+            addPayee(payees[i], shares_[i]);
+        }
     }
 
     /**
@@ -80,7 +70,7 @@ contract GovernanceRewardsSplitter is Ownable {
      */
     function release(address account) public virtual {
         require(
-            _configToShares[currentConfig][account] > 0,
+            _payeesToShares.contains(account),
             "GovernanceRewardsSplitter: account has no shares"
         );
 
@@ -91,9 +81,6 @@ contract GovernanceRewardsSplitter is Ownable {
             "GovernanceRewardsSplitter: account is not due payment"
         );
 
-        // _erc20TotalReleased[governanceToken] is the sum of all values in _erc20Released[governanceToken].
-        // If "_erc20TotalReleased[governanceToken] += payment" does not overflow, then "_erc20Released[governanceToken][account] += payment"
-        // cannot overflow.
         governanceTokenTotalReleased += payment;
         unchecked {
             accountToGovernanceTokenReleased[account] += payment;
@@ -115,57 +102,77 @@ contract GovernanceRewardsSplitter is Ownable {
         );
         require(shares_ > 0, "GovernanceRewardsSplitter: shares are 0");
         require(
-            _configToShares[currentConfig][account] == 0,
+            !_payeesToShares.contains(account),
             "GovernanceRewardsSplitter: account already has shares"
         );
 
-        _configToPayees[currentConfig].push(account);
-        _configToShares[currentConfig][account] = shares_;
-        _configTotalShares[currentConfig] += shares_;
-        emit PayeeAdded(currentConfig, account, shares_);
+        _payeesToShares.set(account, shares_);
+        totalShares += shares_;
+        emit PayeeAdded(account, shares_);
     }
 
     /**
-     * @dev Sets a new payee and share config
-     * @param payees The addresses of the payees to be set.
-     * @param shares_ The number of shares owned respectively by each payee. (i.e shares_[0] is the amount owned by payees[0])
+     * @dev Edit an existing payee's shares.
+     * @param account The address of the payee to edit.
+     * @param newShares The new number of shares owned by the payee.
      */
-    function setNewConfig(
-        address[] memory payees,
-        uint256[] memory shares_
-    ) public onlyOwner {
-        currentConfig++; // Start's this new splitter config round
+    function editPayee(address account, uint256 newShares) public onlyOwner {
         require(
-            payees.length == shares_.length,
-            "GovernanceRewardsSplitter: miss match between payees length and shares_ length"
+            _payeesToShares.contains(account),
+            "GovernanceRewardsSplitter: account does not exist"
         );
-        require(payees.length > 0, "GovernanceRewardsSplitter: no payees");
+        require(
+            newShares > 0,
+            "GovernanceRewardsSplitter: new shares must be greater than 0"
+        );
 
-        for (uint256 i = 0; i < payees.length; i++) {
-            addPayee(payees[i], shares_[i]);
-        }
-        emit NewSplitConfiguration(currentConfig, payees, shares_);
+        uint256 oldShares = _payeesToShares.get(account);
+        totalShares = totalShares - oldShares + newShares;
+        _payeesToShares.set(account, newShares);
+        emit PayeeEdited(account, newShares);
     }
 
     /**
-     * @dev Getter for current round's payees.
+     * @dev Delete an existing payee from the contract.
+     * @param account The address of the payee to delete.
+     */
+    function deletePayee(address account) public onlyOwner {
+        require(
+            _payeesToShares.contains(account),
+            "GovernanceRewardsSplitter: account does not exist"
+        );
+
+        uint256 shares = _payeesToShares.get(account);
+        totalShares -= shares;
+        _payeesToShares.remove(account);
+        emit PayeeDeleted(account);
+    }
+
+    /**
+     * @dev Getter for all current payees.
      */
     function currentPayees() public view returns (address[] memory) {
-        return _configToPayees[currentConfig];
+        address[] memory payees = new address[](_payeesToShares.length());
+        for (uint256 i = 0; i < _payeesToShares.length(); i++) {
+            (address payee, ) = _payeesToShares.at(i);
+            payees[i] = payee;
+        }
+        return payees;
     }
 
     /**
-     * @dev Getter for the current round's amount of shares held by an account.
+     * @dev Getter for the current amount of shares held by an account.
      */
     function currentShares(address account) public view returns (uint256) {
-        return _configToShares[currentConfig][account];
+        (, uint256 shares) = _payeesToShares.tryGet(account);
+        return shares;
     }
 
     /**
-     * @dev Getter for the total shares held by payees.
+     * @dev Getter for the total shares held by all payees.
      */
     function currentTotalShares() public view returns (uint256) {
-        return _configTotalShares[currentConfig];
+        return totalShares;
     }
 
     /**
@@ -183,7 +190,7 @@ contract GovernanceRewardsSplitter is Ownable {
     }
 
     /**
-     * @dev internal logic for computing the pending payment of an `account` given the governanceToken historical balances and
+     * @dev Internal logic for computing the pending payment of an `account` given the governanceToken historical balances and
      * already released amounts.
      */
     function _pendingPayment(
@@ -191,9 +198,7 @@ contract GovernanceRewardsSplitter is Ownable {
         uint256 totalReceived,
         uint256 alreadyReleased
     ) private view returns (uint256) {
-        return
-            (totalReceived * _configToShares[currentConfig][account]) /
-            _configTotalShares[currentConfig] -
-            alreadyReleased;
+        uint256 shares = _payeesToShares.get(account);
+        return (totalReceived * shares) / totalShares - alreadyReleased;
     }
 }
