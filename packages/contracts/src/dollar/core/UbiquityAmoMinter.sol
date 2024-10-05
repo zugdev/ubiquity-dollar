@@ -15,11 +15,17 @@ import {IUbiquityPool} from "../interfaces/IUbiquityPool.sol";
 contract UbiquityAmoMinter is Ownable {
     using SafeERC20 for ERC20;
 
+    // TESTING STORAGE CHECK WORKFLOW
+
     /// @notice Collateral token used by the AMO minter
     ERC20 public immutable collateralToken;
 
+    // TESTING STORAGE CHECK WORKFLOW
+
     /// @notice Ubiquity pool interface
     IUbiquityPool public pool;
+
+    // TESTING STORAGE CHECK WORKFLOW
 
     /// @notice Collateral-related properties
     address public immutable collateralAddress;
@@ -27,8 +33,12 @@ contract UbiquityAmoMinter is Ownable {
     uint256 public immutable missingDecimals;
     int256 public collateralBorrowCap = int256(100_000e18);
 
+    // TESTING STORAGE CHECK WORKFLOW
+
     /// @notice Mapping for tracking borrowed collateral balances per AMO
     mapping(address => int256) public collateralBorrowedBalances;
+
+    // TESTING STORAGE CHECK WORKFLOW
 
     /// @notice Sum of all collateral borrowed across Amos
     int256 public collateralTotalBorrowedBalance = 0;
