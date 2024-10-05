@@ -27,6 +27,7 @@ contract UbiquityAmoMinter is Ownable {
     uint256 public immutable missingDecimals;
     int256 public collateralBorrowCap = int256(100_000e18);
     uint256 public JUST_A_TEST = 0;
+    uint256 public JUST_A_TEST_1 = 10;
 
     /// @notice Mapping for tracking borrowed collateral balances per AMO
     mapping(address => int256) public collateralBorrowedBalances;
