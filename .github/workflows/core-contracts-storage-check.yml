@@ -53,7 +53,7 @@ jobs:
 
           # Set the matrix only if there are contracts to check
           if [ -s contracts.txt ]; then
-            echo "matrix=$(cat contracts.txt | jq -R -s -c 'split(\"\\n\")[:-1]')" >> $GITHUB_OUTPUT
+            echo "matrix=$(cat contracts.txt | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
           fi
 
     outputs:
