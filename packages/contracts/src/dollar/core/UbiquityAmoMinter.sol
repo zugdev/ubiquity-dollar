@@ -36,6 +36,8 @@ contract UbiquityAmoMinter is Ownable {
     /// @notice Mapping to track active AMOs
     mapping(address => bool) public Amos;
 
+    uint256 public TEST_VARIABLE;
+
     /* ========== CONSTRUCTOR ========== */
 
     /**
