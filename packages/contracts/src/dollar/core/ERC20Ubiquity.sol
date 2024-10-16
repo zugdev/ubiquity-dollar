@@ -25,6 +25,8 @@ abstract contract ERC20Ubiquity is
     ERC20PermitUpgradeable,
     ERC20PausableUpgradeable
 {
+    address test;
+
     /// @notice Token symbol
     string private _symbol;
 
