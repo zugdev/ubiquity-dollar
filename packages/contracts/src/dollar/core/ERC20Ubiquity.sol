@@ -26,7 +26,7 @@ abstract contract ERC20Ubiquity is
     ERC20PausableUpgradeable
 {
     /// @notice Token symbol
-    string private _symbol;
+    string private test; // _symbol
 
     /// @notice Access control interface
     IAccessControl public accessControl;

@@ -8,7 +8,7 @@ import "./Constants.sol";
 /// @notice Shared struct used as a storage in the `LibAppStorage` library
 struct AppStorage {
     // reentrancy guard
-    uint256 reentrancyStatus;
+    uint256 test; //reentrancyStatus
     // others
     address dollarTokenAddress;
     address creditNftAddress;
