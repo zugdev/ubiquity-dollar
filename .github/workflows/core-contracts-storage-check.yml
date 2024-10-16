@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - development
+      - fix-core-contracts-storage-check
   pull_request:
 
 jobs:
