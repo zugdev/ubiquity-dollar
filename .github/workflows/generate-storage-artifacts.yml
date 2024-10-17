@@ -22,17 +22,18 @@ jobs:
         working-directory: packages/contracts
         run: |
           # Collect all contracts from core and libraries
-          find src/dollar/core/*.sol src/dollar/libraries/Lib*.sol -type f > contracts.txt
+          CONTRACTS="$(find src/dollar/core/*.sol src/dollar/libraries/Lib*.sol -type f)"
 
-          # Create the formatted contracts list <file path>:<contract name>
-          touch formatted_contracts.txt
-          while read -r contract; do
-            contract_name=$(basename "$contract" .sol)
-            echo "${contract}:${contract_name}" >> formatted_contracts.txt
-          done
+          for CONTRACT in $CONTRACTS; do
+            # Extract the contract name without the .sol extension
+            CONTRACT_NAME=$(basename "$CONTRACT" .sol)
+
+            # Write <contract path>:<contract name> to contracts.txt
+            echo "${CONTRACT}:${CONTRACT_NAME}" >> contracts.txt
+            done
 
           # Set the matrix output
-          echo "matrix=$(cat formatted_contracts.txt | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "matrix=$(cat contracts.txt | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
