@@ -1,0 +1,59 @@
+name: Generate Storage Artifacts
+
+on:
+  workflow_dispatch
+
+jobs:
+  provide_contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set contracts matrix for all matching contracts
+        id: set-matrix
+        working-directory: packages/contracts
+        run: |
+          # Find all contracts matching the patterns in core and libraries
+          find src/dollar/core -name '*.sol' > contracts.txt
+          find src/dollar/libraries -name 'Lib*.sol' >> contracts.txt
+
+          # Generate the matrix from the list of contracts
+          if [ -s contracts.txt ]; then
+            echo "matrix=$(cat contracts.txt | jq -R -s -c 'split(\"\n\")[:-1]')" >> $GITHUB_OUTPUT
+          fi
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+  check_storage_layout:
+    needs: provide_contracts
+    runs-on: ubuntu-latest
+    if: ${{ needs.provide_contracts.outputs.matrix != '[]' && needs.provide_contracts.outputs.matrix != '' }}
+
+    strategy:
+      matrix:
+        contract: ${{ fromJSON(needs.provide_contracts.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check For Core Contracts Storage Changes
+        uses: Rubilmax/foundry-storage-check@main
+        with:
+          workingDirectory: packages/contracts
+          contract: ${{ matrix.contract }}
