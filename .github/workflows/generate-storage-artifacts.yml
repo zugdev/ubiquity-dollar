@@ -24,17 +24,15 @@ jobs:
           # Collect all contracts from core and libraries
           find src/dollar/core/*.sol src/dollar/libraries/Lib*.sol -type f > contracts.txt
 
-          # Format as <file path>:<contract name>
+          # Create the formatted contracts list <file path>:<contract name>
           touch formatted_contracts.txt
           while read -r contract; do
             contract_name=$(basename "$contract" .sol)
             echo "${contract}:${contract_name}" >> formatted_contracts.txt
           done
 
-          # Generate the matrix from the list of contracts
-          if [ -s contracts.txt ]; then
-            echo "matrix=$(cat formatted_contracts.txt | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
-          fi
+          # Set the matrix output
+          echo "matrix=$(cat formatted_contracts.txt | jq -R -s -c 'split(\"\n\")[:-1]')" >> $GITHUB_OUTPUT
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
