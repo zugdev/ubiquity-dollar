@@ -32,7 +32,7 @@ jobs:
           done
 
           # Set the matrix output
-          echo "matrix=$(cat formatted_contracts.txt | jq -R -s -c 'split(\"\n\")[:-1]')" >> $GITHUB_OUTPUT
+          echo "matrix=$(cat formatted_contracts.txt | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
