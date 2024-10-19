@@ -25,8 +25,6 @@ abstract contract ERC20Ubiquity is
     ERC20PermitUpgradeable,
     ERC20PausableUpgradeable
 {
-    // this is a non-colliding change
-
     /// @notice Token symbol
     string private _symbol;
 
