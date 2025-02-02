@@ -35,6 +35,7 @@ library LibChef {
 
     /// @notice Pool info
     struct PoolInfo {
+        uint256 test2;
         uint256 lastRewardBlock; // Last block number that Governance Token distribution occurs.
         uint256 accGovernancePerShare; // Accumulated Governance Tokens per share, times 1e12. See below.
     }
