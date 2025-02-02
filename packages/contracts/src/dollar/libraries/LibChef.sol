@@ -41,6 +41,7 @@ library LibChef {
 
     /// @notice Struct used as a storage for the current library
     struct ChefStorage {
+        uint256 test;
         // Governance Tokens created per block.
         uint256 governancePerBlock;
         // Bonus multiplier for early Governance Token makers.
