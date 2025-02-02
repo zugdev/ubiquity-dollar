@@ -35,12 +35,14 @@ library LibChef {
 
     /// @notice Pool info
     struct PoolInfo {
+        uint256 test2;
         uint256 lastRewardBlock; // Last block number that Governance Token distribution occurs.
         uint256 accGovernancePerShare; // Accumulated Governance Tokens per share, times 1e12. See below.
     }
 
     /// @notice Struct used as a storage for the current library
     struct ChefStorage {
+        uint256 test;
         // Governance Tokens created per block.
         uint256 governancePerBlock;
         // Bonus multiplier for early Governance Token makers.

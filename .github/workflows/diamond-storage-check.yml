@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - '**.sol'
+  workflow_dispatch:
 
 jobs:
   provide_contracts:
